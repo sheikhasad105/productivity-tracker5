@@ -468,4 +468,212 @@
       staff.lastRemark = '';
     }
 
-    localStorage.setItem('bankStaffData', JSO
+    localStorage.setItem('bankStaffData', JSON.stringify(staffData));
+    
+    $('logOpened').value = '';
+    $('logNtb').value = '';
+    $('logRemark').value = '';
+    
+    updateMainDashboard();
+    renderSideMenuList();
+    
+    alert(`✅ Data Saved for ${staff.name} on ${date}`);
+  }
+
+  // ==================== RENDER FUNCTIONS ====================
+
+  // 1. Update Main Dashboard (Front View)
+  function updateMainDashboard() {
+    const selDate = $('mainDate').value;
+    
+    let dOpens = 0, dNtb = 0, dPending = 0;
+    let selectHtml = '<option value="">-- Select Staff --</option>';
+    let pendingListHtml = '';
+    const staffIds = Object.keys(staffData);
+
+    staffIds.forEach(id => {
+      const s = staffData[id];
+      
+      // Dropdown update (only present staff)
+      if (!s.isAbsent) {
+        selectHtml += `<option value="${id}">${s.name}</option>`;
+      }
+
+      // Get specific date log
+      const dayLog = (s.logs && s.logs[selDate]) ? s.logs[selDate] : { opened: 0, ntb: 0 };
+      
+      if (!s.isAbsent) {
+        dOpens += dayLog.opened;
+        dNtb += dayLog.ntb;
+        dPending += s.pending;
+
+        // Add to front pending list if pending > 0 and not absent
+        if (s.pending > 0) {
+          let r = s.lastRemark ? `<br><span style="color:#C2410C;font-size:10px;">📝 ${s.lastRemark}</span>` : '';
+          pendingListHtml += `
+            <div class="pending-card">
+              <div>
+                <h4>${s.name} <span style="font-size:11px; font-weight:normal; color:#EA580C;">(Pending: ${s.pending})</span></h4>
+                <p>Aaj khole: ${dayLog.opened} | NTB: ${dayLog.ntb} ${r}</p>
+              </div>
+            </div>
+          `;
+        }
+      }
+    });
+
+    $('dOpens').textContent = dOpens;
+    $('dNtb').textContent = dNtb;
+    $('dPending').textContent = dPending;
+    $('logStaffSelect').innerHTML = selectHtml;
+
+    if(pendingListHtml === '') {
+      $('frontPendingList').innerHTML = '<div class="empty">MashaAllah! Koi staff pending nahi hai.</div>';
+    } else {
+      $('frontPendingList').innerHTML = pendingListHtml;
+    }
+  }
+
+  // 2. Render Side Menu List (Full Staff Management)
+  function renderSideMenuList() {
+    const list = $('sideMenuStaffList');
+    const staffIds = Object.keys(staffData);
+    
+    if(staffIds.length === 0) {
+      list.innerHTML = '<div class="empty">No staff added.</div>';
+      return;
+    }
+
+    // Find Top Performer
+    let topId = null;
+    let maxOpened = -1;
+    staffIds.forEach(id => {
+      if(staffData[id].totalOpened > maxOpened && staffData[id].totalOpened > 0 && !staffData[id].isAbsent) {
+        maxOpened = staffData[id].totalOpened;
+        topId = id;
+      }
+    });
+
+    list.innerHTML = staffIds.map(id => {
+      const s = staffData[id];
+      
+      let statusBadge = '';
+      if (s.isAbsent) {
+        statusBadge = `<span class="stat-badge bg-gray">Absent</span>`;
+      } else {
+        statusBadge = s.pending > 0 
+          ? `<span class="stat-badge bg-red">Pending: ${s.pending}</span>` 
+          : `<span class="stat-badge bg-green">Clear (0)</span>`;
+      }
+        
+      const trophy = (id === topId) ? '🏆' : '';
+      const waMsg = encodeURIComponent(`Hello ${s.name}, your pending accounts are ${s.pending}.`);
+      const waLink = s.phone ? `https://wa.me/${s.phone}?text=${waMsg}` : `https://wa.me/?text=${waMsg}`;
+      
+      const absentBtn = s.isAbsent 
+          ? `<button class="action-icon" onclick="toggleAbsent('${id}')" title="Mark Present">👤</button>`
+          : `<button class="action-icon" onclick="toggleAbsent('${id}')" title="Mark Absent">🚫</button>`;
+
+      return `
+        <div class="staff-card" style="${s.isAbsent ? 'opacity: 0.6;' : ''}">
+          <div class="staff-info">
+            <h4>${s.name} ${trophy}</h4>
+            <div class="staff-stats">
+              <span class="stat-badge bg-blue">Total: ${s.totalOpened}</span>
+              <span class="stat-badge bg-purple">NTB: ${s.totalNtb || 0}</span>
+              ${statusBadge}
+            </div>
+          </div>
+          <div>
+            ${!s.isAbsent ? `<button class="action-icon" onclick="window.open('${waLink}', '_blank')">💬</button>` : ''}
+            ${absentBtn}
+            <button class="action-icon" onclick="deleteStaffMaster('${id}')">❌</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ==================== SHARE & EXPORT ====================
+  function exportCSV() {
+    const staffIds = Object.keys(staffData);
+    if(staffIds.length === 0) { alert('No data to export!'); return; }
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Staff Name,Phone,Total Opened,Total NTB,Pending,Status,Last Remark\n";
+
+    staffIds.forEach(id => {
+      const s = staffData[id];
+      const remark = s.lastRemark ? `"${s.lastRemark}"` : "";
+      const status = s.isAbsent ? "Absent" : "Present";
+      csvContent += `${s.name},${s.phone},${s.totalOpened},${s.totalNtb || 0},${s.pending},${status},${remark}\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "staff_report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function shareList() {
+    const staffIds = Object.keys(staffData);
+    if(staffIds.length === 0) { alert('List khaali hai!'); return; }
+    
+    // Share report us date ki hogi jo front dashboard par select hai
+    const reportDate = $('mainDate').value || new Date().toISOString().split('T')[0];
+    
+    let text = `*🏦 Staff Productivity Report*\n📅 Date: ${reportDate}\n\n`;
+    let pendingStaff = [];
+    let clearStaff = [];
+    let absentCount = 0;
+
+    staffIds.forEach(id => {
+      const s = staffData[id];
+      
+      if (s.isAbsent) {
+        absentCount++;
+        return; 
+      }
+
+      const dayLog = (s.logs && s.logs[reportDate]) ? s.logs[reportDate] : { opened: 0, ntb: 0 };
+      const dailyData = `Opened: ${dayLog.opened}, NTB: ${dayLog.ntb}`;
+
+      if(s.pending > 0) {
+        let r = s.lastRemark ? ` (${s.lastRemark})` : '';
+        pendingStaff.push(`- *${s.name}*: ${dailyData} | Pending: ${s.pending}${r}`);
+      } else {
+        clearStaff.push(`- *${s.name}*: ${dailyData} | (Clear)`);
+      }
+    });
+
+    text += `⚠️ *PENDING STAFF (${pendingStaff.length})*\n`;
+    text += pendingStaff.length ? pendingStaff.join('\n') + '\n\n' : "No pending staff.\n\n";
+
+    text += `✅ *CLEAR STAFF (${clearStaff.length})*\n`;
+    text += clearStaff.length ? clearStaff.join('\n') + '\n\n' : "No clear staff.\n\n";
+    
+    if(absentCount > 0) text += `🚫 *Absent Staff: ${absentCount} (Skipped)*`;
+
+    if (navigator.share) {
+      navigator.share({ title: 'Staff Report', text: text }).catch(() => {});
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      alert('Report copy ho gayi! WhatsApp par paste karein.');
+    }
+  }
+
+  // Initial Renders
+  renderSummary();
+  updateMainDashboard();
+  renderSideMenuList();
+</script>
+</body>
+</html>
