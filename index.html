@@ -3,677 +3,305 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#1E3A8A">
-<title>Bank Productivity Tracker</title>
+<title>NTB Daily Productivity</title>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,Segoe UI,Roboto,sans-serif;}
-  body{background:#EEF2F7;min-height:100vh;display:flex;justify-content:center;overflow-x:hidden;}
-  .phone{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px;padding:14px;padding-bottom:40px;}
-  
-  /* Header */
-  .header{background:#1E3A8A;color:#fff;border-radius:20px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 15px rgba(30,58,138,.2);}
-  .header-text h1{font-size:16px;letter-spacing:1px;}
-  .header-text p{font-size:11px;color:#BFDBFE;margin-top:2px;}
-  .menu-btn{font-size:28px;font-weight:bold;cursor:pointer;line-height:1; padding:0 5px;}
-
-  /* Tabs */
-  .tabs{display:flex;background:#fff;border-radius:14px;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
-  .tab-btn{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:700;color:#64748B;border-radius:10px;cursor:pointer;border:none;background:none;transition:.2s;}
-  .tab-btn.active{background:#1E3A8A;color:#fff;box-shadow:0 2px 5px rgba(30,58,138,.3);}
-  .tab-content{display:none; flex-direction:column; gap:12px;}
-  .tab-content.active{display:flex;}
-
-  /* Common Cards */
-  .card{background:#fff;border-radius:18px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.06);}
-  .card h3{font-size:12px;color:#1E3A8A;font-weight:800;letter-spacing:1px;margin-bottom:12px;}
-  
-  /* Summary Tab Styles */
-  .hero-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .hero{background:#fff;border-radius:18px;padding:16px 10px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.06);}
-  .hero .label{font-size:9px;color:#64748B;font-weight:800;letter-spacing:0.5px;}
-  .hero .pct{font-size:26px;font-weight:800;margin:6px 0;}
-  .bar{height:8px;background:#E2E8F0;border-radius:20px;overflow:hidden;margin-top:8px;}
-  .bar-fill{height:100%;border-radius:20px;transition:.4s;width:0%;}
-  .bar-labels{display:flex;justify-content:space-between;font-size:9px;font-weight:700;margin-top:6px;}
-  .green{color:#16A34A;} .red{color:#DC2626;}
-
-  .summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .pill{background:#fff;border-radius:14px;padding:12px 6px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05);}
-  .pill .num{font-size:20px;font-weight:800;}
-  .pill .lbl{font-size:9px;color:#64748B;font-weight:700;letter-spacing:.5px;margin-top:2px;}
-  
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .field{margin-bottom:10px;}
-  .field label{font-size:10px;font-weight:700;color:#64748B;letter-spacing:.5px;}
-  .field input, .field select{width:100%;margin-top:5px;padding:12px;font-size:15px;font-weight:700;border:2px solid #E2E8F0;border-radius:12px;outline:none;background:#F8FAFC;}
-  .field input:focus, .field select:focus{border-color:#2563EB;background:#fff;}
-  .btn{width:100%;padding:14px;background:#1E3A8A;color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;}
-  .btn:active{transform:scale(.98);}
-  
-  .trend{background:#fff;border-radius:20px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.06); margin-bottom:20px;}
-  .trend h3{font-size:12px;color:#1E3A8A;font-weight:800;margin-bottom:12px;}
-  .chart{display:flex;align-items:flex-end;gap:6px;height:100px;padding-top:10px;}
-  .chart .bar-w{flex:1;background:#E2E8F0;border-radius:6px 6px 0 0;position:relative;min-height:4px;}
-  .chart .bar-w .fill{position:absolute;bottom:0;left:0;right:0;border-radius:6px 6px 0 0;}
-  .chart .bar-w .d{position:absolute;bottom:-16px;left:0;right:0;text-align:center;font-size:8px;color:#94A3B8;}
-  .chart-wrap{padding-bottom:18px;}
-
-  /* STAFF DASHBOARD (MAIN SCREEN) */
-  .date-box{background:#E0E7FF; border-radius:16px; padding:12px; display:flex; align-items:center; justify-content:space-between;}
-  .date-box label{font-size:12px; font-weight:800; color:#1E3A8A;}
-  .date-box input{border:1px solid #A5B4FC; padding:8px; border-radius:8px; font-size:14px; font-weight:bold;}
-  
-  .daily-stats{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
-  .d-stat{background:#fff; border-radius:14px; padding:12px 5px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.05);}
-  .d-stat .n{font-size:22px; font-weight:800;}
-  .d-stat .l{font-size:9px; font-weight:700; color:#64748B; margin-top:2px;}
-
-  .pending-card{background:#FFF7ED; border:1px solid #FED7AA; border-radius:14px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;}
-  .pending-card h4{font-size:14px; color:#9A3412;}
-  .pending-card p{font-size:11px; color:#C2410C; margin-top:2px;}
-
-  /* SIDE MENU (3 DOTS) */
-  .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;z-index:99;}
-  .overlay.open{display:block;}
-  .side-menu{position:fixed;top:0;right:-100%;width:85%;max-width:350px;height:100vh;background:#F8FAFC;z-index:100;transition:.3s ease-in-out;display:flex;flex-direction:column;box-shadow:-4px 0 15px rgba(0,0,0,.1);}
-  .side-menu.open{right:0;}
-  .menu-header{padding:20px;background:#1E3A8A;color:#fff;display:flex;justify-content:space-between;align-items:center;}
-  .menu-header h3{font-size:15px;}
-  .close-btn{font-size:24px;cursor:pointer;background:none;border:none;color:#fff;}
-  .menu-content{padding:15px;overflow-y:auto;flex:1; display:flex; flex-direction:column; gap:12px;}
-
-  /* Side Menu Items */
-  .btn-green{background:#25D366; color:#fff;}
-  .btn-blue{background:#2563EB; color:#fff;}
-  .staff-card{background:#fff;border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.05); border-left:3px solid #1E3A8A;}
-  .staff-info h4{font-size:13px;color:#0F172A; display:flex; align-items:center; gap:5px;}
-  .staff-info p{font-size:9px; color:#64748B; margin-top:2px; font-style:italic;}
-  .staff-stats{display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;}
-  .stat-badge{font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;}
-  .bg-green{background:#DCFCE7;color:#16A34A;}
-  .bg-red{background:#FEE2E2;color:#DC2626;}
-  .bg-blue{background:#DBEAFE;color:#2563EB;}
-  .bg-purple{background:#F3E8FF;color:#8B5CF6;}
-  .bg-gray{background:#F1F5F9;color:#64748B;}
-  .action-icon{background:none; border:none; font-size:15px; cursor:pointer; padding:4px;}
-  .empty{text-align:center;color:#94A3B8;font-size:12px;padding:15px 0;}
-  .settings-box{background:#FEF3C7; border:1px solid #FDE68A; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:space-between;}
-  .settings-box label{font-size:11px; font-weight:800; color:#92400E;}
-  .settings-box input{width:50px; padding:5px; font-size:13px; font-weight:bold; border-radius:6px; border:1px solid #FDE68A; text-align:center;}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+    background: #f4f6f9; color: #1f2937; padding: 16px;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: #6b7280; font-size: 13px; margin-bottom: 16px; }
+  .card {
+    background: #fff; border-radius: 12px; padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08); margin-bottom: 16px;
+  }
+  label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+  input, select {
+    width: 100%; padding: 10px; border: 1px solid #d1d5db;
+    border-radius: 8px; font-size: 14px; margin-bottom: 12px;
+    background: #fff;
+  }
+  button {
+    padding: 10px 16px; border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .btn-primary { background: #2563eb; color: #fff; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-ghost { background: #e5e7eb; color: #111; }
+  .btn-wa { background: #25D366; color: #fff; }
+  .btn-wa:hover { background: #1da851; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .row > * { flex: 1; min-width: 140px; }
+  .hidden { display: none !important; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #eee; }
+  th { background: #f9fafb; font-size: 12px; text-transform: uppercase; color: #6b7280; }
+  .badge { padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; }
+  .ok { background: #dcfce7; color: #166534; }
+  .star { background: #fef3c7; color: #92400e; }
+  .no { background: #fee2e2; color: #991b1b; }
+  .absent { background: #e5e7eb; color: #4b5563; }
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; }
+  .stat {
+    flex: 1; min-width: 110px; background: #f9fafb;
+    padding: 12px; border-radius: 10px; text-align: center;
+  }
+  .stat .num { font-size: 22px; font-weight: 700; color: #2563eb; }
+  .stat .lbl { font-size: 12px; color: #6b7280; }
+  .top { background: #fffbeb; border: 1px solid #fde68a; }
+  .empty { text-align: center; color: #9ca3af; padding: 24px; }
 </style>
 </head>
 <body>
-<div class="phone">
-  
-  <!-- HEADER WITH 3 DOTS -->
-  <div class="header">
-    <div class="header-text">
-      <h1>BANK TRACKER</h1>
-      <p>Daily Productivity & CRM</p>
-    </div>
-    <div class="menu-btn" onclick="toggleMenu()">⋮</div>
-  </div>
+<div class="container">
+  <h1>NTB Daily Productivity</h1>
+  <p class="sub">Minimum 1 NTB per day • 10 staff</p>
 
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('summary')">📊 Branch Summary</button>
-    <button class="tab-btn" onclick="switchTab('staff')">👥 Staff Dashboard</button>
-  </div>
-
-  <!-- ================= SUMMARY TAB ================= -->
-  <div id="tab-summary" class="tab-content active">
-    <div class="hero-row">
-      <div class="hero">
-        <div class="label">TODAY'S ACCURACY</div>
-        <div class="pct" id="todayPct">—</div>
-        <div class="bar"><div class="bar-fill" id="todayFill"></div></div>
-        <div class="bar-labels">
-          <span class="green" id="todayCorrect">C: 0</span>
-          <span class="red" id="todayDisc">D: 0</span>
-        </div>
+  <!-- ENTRY FORM -->
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>Staff</label>
+        <select id="staff"></select>
       </div>
-      <div class="hero">
-        <div class="label">THIS MONTH</div>
-        <div class="pct" id="monthPct">—</div>
-        <div class="bar"><div class="bar-fill" id="monthFill"></div></div>
-        <div class="bar-labels">
-          <span class="green" id="monthCorrect">C: 0</span>
-          <span class="red" id="monthDisc">D: 0</span>
-        </div>
+      <div>
+        <label>Date</label>
+        <input type="date" id="date">
       </div>
-    </div>
-
-    <div class="summary">
-      <div class="pill"><div class="num" style="color:#2563EB" id="oTotal">0</div><div class="lbl">TOTAL OPENS</div></div>
-      <div class="pill"><div class="num" style="color:#16A34A" id="oCorrect">0</div><div class="lbl">CORRECT</div></div>
-      <div class="pill"><div class="num" style="color:#DC2626" id="oDisc">0</div><div class="lbl">DISCREPANCY</div></div>
-      <div class="pill"><div class="num" style="color:#8B5CF6" id="oNtbs">0</div><div class="lbl">TOTAL NTB</div></div>
-    </div>
-
-    <div class="card">
-      <h3>➕ ADD BRANCH ENTRY</h3>
-      <div class="field">
-        <label>DATE</label>
-        <input type="date" id="dateInput">
-      </div>
-      <div class="row">
-        <div class="field">
-          <label>TOTAL OPENS</label>
-          <input type="number" id="totalInput" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label>DISCREPANCY</label>
-          <input type="number" id="discInput" placeholder="0" inputmode="numeric">
-        </div>
-      </div>
-      <div class="field">
-        <label>NEW TO BANK (NTB)</label>
-        <input type="number" id="ntbInput" placeholder="0" inputmode="numeric">
-      </div>
-      <button class="btn" onclick="addEntry()">💾 SAVE ENTRY</button>
-    </div>
-
-    <div class="trend">
-      <h3>📊 LAST 7 DAYS TREND</h3>
-      <div class="chart-wrap"><div class="chart" id="chart"></div></div>
-    </div>
-  </div>
-
-  <!-- ================= STAFF DASHBOARD TAB ================= -->
-  <div id="tab-staff" class="tab-content">
-    
-    <!-- Date Selector -->
-    <div class="date-box">
-      <label>📅 Select Date:</label>
-      <input type="date" id="mainDate" onchange="updateMainDashboard()">
-    </div>
-
-    <!-- Daily Stats -->
-    <div class="daily-stats">
-      <div class="d-stat"><div class="n" style="color:#2563EB" id="dOpens">0</div><div class="l">OPENS</div></div>
-      <div class="d-stat"><div class="n" style="color:#8B5CF6" id="dNtb">0</div><div class="l">NTB</div></div>
-      <div class="d-stat"><div class="n" style="color:#DC2626" id="dPending">0</div><div class="l">PENDING</div></div>
-    </div>
-
-    <!-- Log Form -->
-    <div class="card" style="background:#F0FDF4; border:1px solid #BBF7D0;">
-      <h3 style="color:#166534;">✅ LOG STAFF ACHIEVEMENT</h3>
-      <div class="field">
-        <label>SELECT STAFF</label>
-        <select id="logStaffSelect">
-          <option value="">-- Select Staff --</option>
+      <div>
+        <label>Status</label>
+        <select id="status" onchange="toggleCount()">
+          <option value="present">Present</option>
+          <option value="absent">Absent</option>
         </select>
       </div>
-      <div class="row">
-        <div class="field">
-          <label>ACCOUNTS OPENED</label>
-          <input type="number" id="logOpened" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label>NTB ACCOUNTS</label>
-          <input type="number" id="logNtb" placeholder="0" inputmode="numeric">
-        </div>
+      <div id="countWrap">
+        <label>NTB Count</label>
+        <input type="number" id="count" min="0" value="1">
       </div>
-      <div class="field">
-        <label>REMARKS (If Pending)</label>
-        <input type="text" id="logRemark" placeholder="e.g. Customer kal aayega">
-      </div>
-      <button class="btn" style="background:#16A34A;" onclick="saveStaffLog()">✔ Save & Update</button>
     </div>
-
-    <!-- Pending Staff List (Front View) -->
-    <div class="card">
-      <h3>⚠️ PENDING STAFF LIST</h3>
-      <div id="frontPendingList"></div>
-    </div>
-
+    <label>Remarks (optional)</label>
+    <input type="text" id="remarks" placeholder="e.g. 2 accounts from walk-in / sick leave">
+    <button class="btn-primary" onclick="addEntry()">Save Entry</button>
   </div>
 
-</div>
-
-<!-- ================= 3 DOTS SIDE MENU ================= -->
-<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-<div class="side-menu" id="sideMenu">
-  <div class="menu-header">
-    <h3>⚙️ Management Menu</h3>
-    <button class="close-btn" onclick="toggleMenu()">✕</button>
+  <!-- SUMMARY -->
+  <div class="card">
+    <h3 style="font-size:15px;margin-bottom:12px;">Daily Summary</h3>
+    <div class="stats" id="stats"></div>
   </div>
-  
-  <div class="menu-content">
-    
-    <!-- Target Settings -->
-    <div class="settings-box">
-      <label>🎯 Daily Target:</label>
-      <input type="number" id="dailyTarget" value="1" min="1" onchange="saveTarget()">
-    </div>
 
-    <!-- Buttons -->
-    <div class="row" style="margin-bottom:5px;">
-      <button class="btn btn-blue" style="font-size:12px; padding:10px;" onclick="exportCSV()">📥 Export Excel</button>
-      <button class="btn btn-green" style="font-size:12px; padding:10px;" onclick="shareList()">📤 Share Report</button>
-    </div>
-
-    <!-- Add Staff Form -->
-    <div class="card" style="padding:12px;">
-      <h3 style="font-size:11px;">👤 ADD NEW STAFF</h3>
-      <div class="field" style="margin-bottom:6px;">
-        <input type="text" id="newStaffName" placeholder="Name" style="padding:8px; font-size:13px;">
+  <!-- REPORT -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <h3 style="font-size:15px;">Report</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn-wa" onclick="shareWhatsApp()">📲 WhatsApp</button>
+        <button class="btn-ghost" onclick="exportCSV()">Export CSV</button>
+        <button class="btn-ghost" onclick="clearAll()">Clear All</button>
       </div>
-      <div class="field" style="margin-bottom:8px;">
-        <input type="tel" id="newStaffPhone" placeholder="WhatsApp No" style="padding:8px; font-size:13px;">
-      </div>
-      <button class="btn" style="padding:8px; font-size:13px;" onclick="addStaffMaster()">➕ Add Staff</button>
     </div>
-
-    <!-- All Staff List (Master List) -->
-    <h3 style="font-size:12px; color:#1E3A8A; margin-top:5px;">📋 ALL STAFF STATUS</h3>
-    <div id="sideMenuStaffList"></div>
-    
+    <div style="margin-bottom:12px;">
+      <input type="date" id="filterDate" onchange="render()">
+    </div>
+    <div id="report"></div>
+    <div id="absentBox" style="margin-top:16px;"></div>
   </div>
 </div>
-
 
 <script>
-  const $ = id => document.getElementById(id);
-  
-  // TABS SWITCH
-  function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    $(`tab-${tabId}`).classList.add('active');
-    event.target.classList.add('active');
+const STAFF = ["Ali","Ahmed","Sara","Bilal","Hina","Usman","Ayesha","Fahad","Zara","Kamran"];
+const KEY = "ntb_entries";
+
+document.getElementById("staff").innerHTML =
+  STAFF.map(s => `<option>${s}</option>`).join("");
+
+const today = new Date().toISOString().slice(0,10);
+document.getElementById("date").value = today;
+document.getElementById("filterDate").value = today;
+
+function toggleCount() {
+  const s = document.getElementById("status").value;
+  document.getElementById("countWrap").classList.toggle("hidden", s === "absent");
+}
+
+function getEntries() {
+  return JSON.parse(localStorage.getItem(KEY) || "[]");
+}
+function saveEntries(list) {
+  localStorage.setItem(KEY, JSON.stringify(list));
+}
+
+function addEntry() {
+  const staff = document.getElementById("staff").value;
+  const date = document.getElementById("date").value;
+  const status = document.getElementById("status").value;
+  const count = status === "absent" ? 0 : parseInt(document.getElementById("count").value || "0");
+  const remarks = document.getElementById("remarks").value.trim();
+
+  if (!date) return alert("Date select karein");
+  if (status === "present" && count < 0) return alert("Count 0 ya zyada ho");
+
+  const list = getEntries();
+  const existing = list.find(e => e.staff === staff && e.date === date);
+  if (existing) {
+    existing.status = status;
+    existing.count = count;
+    existing.remarks = remarks;
+  } else {
+    list.push({ id: Date.now() + Math.random(), staff, date, status, count, remarks });
   }
+  saveEntries(list);
+  document.getElementById("remarks").value = "";
+  document.getElementById("count").value = 1;
+  render();
+}
 
-  // MENU TOGGLE
-  function toggleMenu() {
-    $('sideMenu').classList.toggle('open');
-    $('overlay').classList.toggle('open');
-  }
+function statusBadge(e) {
+  if (e.status === "absent") return `<span class="badge absent">Absent</span>`;
+  if (e.count >= 2) return `<span class="badge star">⭐ ${e.count} — Top</span>`;
+  if (e.count === 1) return `<span class="badge ok">✅ 1 — Achieved</span>`;
+  return `<span class="badge no">❌ 0 — Missed</span>`;
+}
 
-  // ==================== BRANCH SUMMARY LOGIC ====================
-  let entries = JSON.parse(localStorage.getItem('accuracyEntries') || '[]');
-  $('dateInput').valueAsDate = new Date();
-  
-  function colorFor(acc){ return acc >= 95 ? '#16A34A' : acc >= 80 ? '#F59E0B' : '#DC2626'; }
+function render() {
+  const filterDate = document.getElementById("filterDate").value;
+  const list = getEntries().filter(e => e.date === filterDate);
 
-  function addEntry(){
-    const date = $('dateInput').value;
-    const total = +$('totalInput').value;
-    const disc  = +$('discInput').value;
-    const ntb   = +$('ntbInput').value || 0;
-    
-    if(!date){ alert('Please select a date'); return; }
-    if(!total || total <= 0){ alert('Total must be greater than 0'); return; }
-    
-    entries = entries.filter(e => e.date !== date);
-    entries.push({ date, total, disc, ntb });
-    entries.sort((a,b) => b.date.localeCompare(a.date));
-    localStorage.setItem('accuracyEntries', JSON.stringify(entries));
-    
-    $('totalInput').value = '';
-    $('discInput').value = '';
-    $('ntbInput').value = '';
-    renderSummary();
-  }
+  const present = list.filter(e => e.status === "present");
+  const absent  = list.filter(e => e.status === "absent");
+  const totalNTB = present.reduce((s,e)=> s + e.count, 0);
+  const achieved = present.filter(e => e.count >= 1).length;
+  const missed   = present.filter(e => e.count === 0).length;
+  const topStaff = present.length
+    ? present.reduce((a,b)=> b.count > a.count ? b : a)
+    : null;
 
-  function renderSummary(){
-    if(entries.length){
-      const e = entries[0];
-      const corr = e.total - e.disc;
-      const acc  = (corr / e.total) * 100;
-      const col  = colorFor(acc);
-      $('todayPct').textContent = acc.toFixed(1) + '%';
-      $('todayPct').style.color = col;
-      $('todayFill').style.width = acc + '%';
-      $('todayFill').style.background = col;
-      $('todayCorrect').textContent = 'C: ' + corr;
-      $('todayDisc').textContent    = 'D: ' + e.disc;
-    } else {
-      $('todayPct').textContent = '—';
-      $('todayFill').style.width = '0%';
-    }
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><div class="num">${totalNTB}</div><div class="lbl">Total NTB</div></div>
+    <div class="stat"><div class="num">${achieved}</div><div class="lbl">Achieved</div></div>
+    <div class="stat"><div class="num">${missed}</div><div class="lbl">Missed (0)</div></div>
+    <div class="stat"><div class="num">${absent.length}</div><div class="lbl">Absent</div></div>
+    <div class="stat top"><div class="num">${topStaff ? topStaff.staff : "—"}</div><div class="lbl">Top Performer</div></div>
+  `;
 
-    const today = new Date();
-    const currentMonth = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
-    const monthEntries = entries.filter(e => e.date.startsWith(currentMonth));
-    const mTotal = monthEntries.reduce((s,e) => s + e.total, 0);
-    const mDisc  = monthEntries.reduce((s,e) => s + e.disc, 0);
-    const mCorr  = mTotal - mDisc;
-    const mAcc   = mTotal === 0 ? 0 : (mCorr / mTotal) * 100;
-    
-    if(mTotal > 0){
-      $('monthPct').textContent = mAcc.toFixed(1) + '%';
-      $('monthPct').style.color = colorFor(mAcc);
-      $('monthFill').style.width = mAcc + '%';
-      $('monthFill').style.background = colorFor(mAcc);
-      $('monthCorrect').textContent = 'C: ' + mCorr;
-      $('monthDisc').textContent    = 'D: ' + mDisc;
-    }
-
-    const oTotal = entries.reduce((s,e) => s + e.total, 0);
-    const oDisc  = entries.reduce((s,e) => s + e.disc, 0);
-    const oNtbs  = entries.reduce((s,e) => s + (e.ntb || 0), 0);
-    $('oTotal').textContent   = oTotal;
-    $('oCorrect').textContent = oTotal - oDisc;
-    $('oDisc').textContent    = oDisc;
-    $('oNtbs').textContent    = oNtbs;
-
-    const chart = $('chart');
-    const last7 = entries.slice(0, 7).reverse();
-    if(last7.length){
-      chart.innerHTML = last7.map(e => {
-        const acc  = ((e.total - e.disc) / e.total) * 100;
-        return `<div class="bar-w" style="height:100%">
-          <div class="fill" style="height:${acc}%;background:${colorFor(acc)}"></div>
-          <div class="d">${e.date.slice(5)}</div>
-        </div>`;
-      }).join('');
-    }
-  }
-
-  // ==================== STAFF CRM LOGIC ====================
-  let staffData = JSON.parse(localStorage.getItem('bankStaffData') || '{}');
-  
-  // Initialize Dates
-  const todayDate = new Date().toISOString().split('T')[0];
-  $('mainDate').value = todayDate;
-  
-  if(localStorage.getItem('dailyTarget')) { $('dailyTarget').value = localStorage.getItem('dailyTarget'); }
-
-  function saveTarget() {
-    localStorage.setItem('dailyTarget', $('dailyTarget').value);
-    updateMainDashboard(); 
-    renderSideMenuList();
-  }
-
-  function addStaffMaster() {
-    const name = $('newStaffName').value.trim();
-    const phone = $('newStaffPhone').value.trim();
-    if(!name) { alert('Enter Staff Name'); return; }
-
-    const id = Date.now().toString();
-    staffData[id] = { 
-      name: name, 
-      phone: phone, 
-      pending: 0, 
-      totalOpened: 0, 
-      totalNtb: 0, 
-      logs: {}, 
-      lastRemark: '', 
-      isAbsent: false 
-    };
-    
-    localStorage.setItem('bankStaffData', JSON.stringify(staffData));
-    $('newStaffName').value = '';
-    $('newStaffPhone').value = '';
-    updateMainDashboard();
-    renderSideMenuList();
-  }
-
-  function deleteStaffMaster(id) {
-    if(!confirm('Delete staff and their data?')) return;
-    delete staffData[id];
-    localStorage.setItem('bankStaffData', JSON.stringify(staffData));
-    updateMainDashboard();
-    renderSideMenuList();
-  }
-
-  function toggleAbsent(id) {
-    let staff = staffData[id];
-    staff.isAbsent = !staff.isAbsent;
-    localStorage.setItem('bankStaffData', JSON.stringify(staffData));
-    updateMainDashboard();
-    renderSideMenuList();
-  }
-
-  function saveStaffLog() {
-    const date = $('mainDate').value; // Dashboard wali date use hogi
-    const staffId = $('logStaffSelect').value;
-    const opened = parseInt($('logOpened').value) || 0;
-    const ntb = parseInt($('logNtb').value) || 0;
-    const remark = $('logRemark').value.trim();
-    const target = parseInt($('dailyTarget').value) || 1;
-
-    if(!staffId) { alert('Select Staff'); return; }
-
-    let staff = staffData[staffId];
-    
-    if(staff.isAbsent) {
-      alert(`${staff.name} is ABSENT. Cannot save data.`);
-      return;
-    }
-
-    if(!staff.logs) staff.logs = {};
-    staff.logs[date] = { opened: opened, ntb: ntb };
-
-    // Recalculate Totals
-    let newTotalOpened = 0;
-    let newTotalNtb = 0;
-    Object.values(staff.logs).forEach(log => {
-      newTotalOpened += log.opened;
-      newTotalNtb += log.ntb;
+  if (present.length === 0) {
+    document.getElementById("report").innerHTML =
+      `<div class="empty">Is date ke liye koi present staff entry nahi hai.</div>`;
+  } else {
+    const sorted = [...present].sort((a,b)=> b.count - a.count);
+    let html = `<table><thead><tr>
+      <th>Staff</th><th>NTB</th><th>Status</th><th>Remarks</th><th></th>
+    </tr></thead><tbody>`;
+    sorted.forEach(e => {
+      html += `<tr>
+        <td><strong>${e.staff}</strong></td>
+        <td>${e.count}</td>
+        <td>${statusBadge(e)}</td>
+        <td style="color:#6b7280;font-size:13px;">${e.remarks || "—"}</td>
+        <td><button class="btn-ghost" style="padding:4px 8px;font-size:12px;" onclick="delEntry('${e.id}')">Delete</button></td>
+      </tr>`;
     });
-    staff.totalOpened = newTotalOpened;
-    staff.totalNtb = newTotalNtb;
-
-    // Pending Calculation
-    const totalDaysLogged = Object.keys(staff.logs).length;
-    const totalTarget = totalDaysLogged * target;
-    let newPending = totalTarget - staff.totalOpened;
-    if(newPending < 0) newPending = 0; 
-    staff.pending = newPending;
-
-    if(opened < target && remark !== '') {
-      staff.lastRemark = remark;
-    } else if (opened >= target) {
-      staff.lastRemark = '';
-    }
-
-    localStorage.setItem('bankStaffData', JSON.stringify(staffData));
-    
-    $('logOpened').value = '';
-    $('logNtb').value = '';
-    $('logRemark').value = '';
-    
-    updateMainDashboard();
-    renderSideMenuList();
-    
-    alert(`✅ Data Saved for ${staff.name} on ${date}`);
+    html += "</tbody></table>";
+    document.getElementById("report").innerHTML = html;
   }
 
-  // ==================== RENDER FUNCTIONS ====================
-
-  // 1. Update Main Dashboard (Front View)
-  function updateMainDashboard() {
-    const selDate = $('mainDate').value;
-    
-    let dOpens = 0, dNtb = 0, dPending = 0;
-    let selectHtml = '<option value="">-- Select Staff --</option>';
-    let pendingListHtml = '';
-    const staffIds = Object.keys(staffData);
-
-    staffIds.forEach(id => {
-      const s = staffData[id];
-      
-      // Dropdown update (only present staff)
-      if (!s.isAbsent) {
-        selectHtml += `<option value="${id}">${s.name}</option>`;
-      }
-
-      // Get specific date log
-      const dayLog = (s.logs && s.logs[selDate]) ? s.logs[selDate] : { opened: 0, ntb: 0 };
-      
-      if (!s.isAbsent) {
-        dOpens += dayLog.opened;
-        dNtb += dayLog.ntb;
-        dPending += s.pending;
-
-        // Add to front pending list if pending > 0 and not absent
-        if (s.pending > 0) {
-          let r = s.lastRemark ? `<br><span style="color:#C2410C;font-size:10px;">📝 ${s.lastRemark}</span>` : '';
-          pendingListHtml += `
-            <div class="pending-card">
-              <div>
-                <h4>${s.name} <span style="font-size:11px; font-weight:normal; color:#EA580C;">(Pending: ${s.pending})</span></h4>
-                <p>Aaj khole: ${dayLog.opened} | NTB: ${dayLog.ntb} ${r}</p>
-              </div>
-            </div>
-          `;
-        }
-      }
+  if (absent.length === 0) {
+    document.getElementById("absentBox").innerHTML = "";
+  } else {
+    let html = `<h4 style="font-size:13px;color:#6b7280;margin-bottom:8px;text-transform:uppercase;">
+      Absent Today (${absent.length})</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+    absent.forEach(e => {
+      html += `<span class="badge absent" style="padding:6px 12px;">
+        ${e.staff}${e.remarks ? " — " + e.remarks : ""}
+        <span onclick="delEntry('${e.id}')" style="cursor:pointer;margin-left:6px;color:#991b1b;">✕</span>
+      </span>`;
     });
+    html += `</div>`;
+    document.getElementById("absentBox").innerHTML = html;
+  }
+}
 
-    $('dOpens').textContent = dOpens;
-    $('dNtb').textContent = dNtb;
-    $('dPending').textContent = dPending;
-    $('logStaffSelect').innerHTML = selectHtml;
+function delEntry(id) {
+  if (!confirm("Delete this entry?")) return;
+  const list = getEntries().filter(e => String(e.id) !== String(id));
+  saveEntries(list);
+  render();
+}
 
-    if(pendingListHtml === '') {
-      $('frontPendingList').innerHTML = '<div class="empty">MashaAllah! Koi staff pending nahi hai.</div>';
-    } else {
-      $('frontPendingList').innerHTML = pendingListHtml;
-    }
+// ============ WHATSAPP SHARE ============
+function shareWhatsApp() {
+  const filterDate = document.getElementById("filterDate").value;
+  const list = getEntries().filter(e => e.date === filterDate);
+
+  if (list.length === 0) {
+    alert("Pehle is date ke liye entries karein.");
+    return;
   }
 
-  // 2. Render Side Menu List (Full Staff Management)
-  function renderSideMenuList() {
-    const list = $('sideMenuStaffList');
-    const staffIds = Object.keys(staffData);
-    
-    if(staffIds.length === 0) {
-      list.innerHTML = '<div class="empty">No staff added.</div>';
-      return;
-    }
+  const present = list.filter(e => e.status === "present").sort((a,b)=> b.count - a.count);
+  const absent  = list.filter(e => e.status === "absent");
+  const totalNTB = present.reduce((s,e)=> s + e.count, 0);
+  const achieved = present.filter(e => e.count >= 1).length;
+  const missed   = present.filter(e => e.count === 0).length;
 
-    // Find Top Performer
-    let topId = null;
-    let maxOpened = -1;
-    staffIds.forEach(id => {
-      if(staffData[id].totalOpened > maxOpened && staffData[id].totalOpened > 0 && !staffData[id].isAbsent) {
-        maxOpened = staffData[id].totalOpened;
-        topId = id;
-      }
+  // date format: 25-Oct-2026
+  const d = new Date(filterDate);
+  const dayStr = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+
+  let msg = `*NTB Daily Report*\n📅 ${dayStr}\n\n`;
+  msg += `📊 *Summary*\n`;
+  msg += `• Total NTB: *${totalNTB}*\n`;
+  msg += `• Achieved (1+): ${achieved}\n`;
+  msg += `• Missed (0): ${missed}\n`;
+  msg += `• Absent: ${absent.length}\n\n`;
+
+  if (present.length > 0) {
+    msg += `✅ *Present Staff*\n`;
+    present.forEach(e => {
+      const mark = e.count >= 2 ? "⭐" : e.count === 1 ? "✅" : "❌";
+      msg += `${mark} ${e.staff}: ${e.count}${e.remarks ? ` (${e.remarks})` : ""}\n`;
     });
-
-    list.innerHTML = staffIds.map(id => {
-      const s = staffData[id];
-      
-      let statusBadge = '';
-      if (s.isAbsent) {
-        statusBadge = `<span class="stat-badge bg-gray">Absent</span>`;
-      } else {
-        statusBadge = s.pending > 0 
-          ? `<span class="stat-badge bg-red">Pending: ${s.pending}</span>` 
-          : `<span class="stat-badge bg-green">Clear (0)</span>`;
-      }
-        
-      const trophy = (id === topId) ? '🏆' : '';
-      const waMsg = encodeURIComponent(`Hello ${s.name}, your pending accounts are ${s.pending}.`);
-      const waLink = s.phone ? `https://wa.me/${s.phone}?text=${waMsg}` : `https://wa.me/?text=${waMsg}`;
-      
-      const absentBtn = s.isAbsent 
-          ? `<button class="action-icon" onclick="toggleAbsent('${id}')" title="Mark Present">👤</button>`
-          : `<button class="action-icon" onclick="toggleAbsent('${id}')" title="Mark Absent">🚫</button>`;
-
-      return `
-        <div class="staff-card" style="${s.isAbsent ? 'opacity: 0.6;' : ''}">
-          <div class="staff-info">
-            <h4>${s.name} ${trophy}</h4>
-            <div class="staff-stats">
-              <span class="stat-badge bg-blue">Total: ${s.totalOpened}</span>
-              <span class="stat-badge bg-purple">NTB: ${s.totalNtb || 0}</span>
-              ${statusBadge}
-            </div>
-          </div>
-          <div>
-            ${!s.isAbsent ? `<button class="action-icon" onclick="window.open('${waLink}', '_blank')">💬</button>` : ''}
-            ${absentBtn}
-            <button class="action-icon" onclick="deleteStaffMaster('${id}')">❌</button>
-          </div>
-        </div>
-      `;
-    }).join('');
+    msg += `\n`;
   }
 
-  // ==================== SHARE & EXPORT ====================
-  function exportCSV() {
-    const staffIds = Object.keys(staffData);
-    if(staffIds.length === 0) { alert('No data to export!'); return; }
-
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Staff Name,Phone,Total Opened,Total NTB,Pending,Status,Last Remark\n";
-
-    staffIds.forEach(id => {
-      const s = staffData[id];
-      const remark = s.lastRemark ? `"${s.lastRemark}"` : "";
-      const status = s.isAbsent ? "Absent" : "Present";
-      csvContent += `${s.name},${s.phone},${s.totalOpened},${s.totalNtb || 0},${s.pending},${status},${remark}\n`;
+  if (absent.length > 0) {
+    msg += `🚫 *Absent*\n`;
+    absent.forEach(e => {
+      msg += `• ${e.staff}${e.remarks ? ` (${e.remarks})` : ""}\n`;
     });
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "staff_report.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   }
 
-  function shareList() {
-    const staffIds = Object.keys(staffData);
-    if(staffIds.length === 0) { alert('List khaali hai!'); return; }
-    
-    // Share report us date ki hogi jo front dashboard par select hai
-    const reportDate = $('mainDate').value || new Date().toISOString().split('T')[0];
-    
-    let text = `*🏦 Staff Productivity Report*\n📅 Date: ${reportDate}\n\n`;
-    let pendingStaff = [];
-    let clearStaff = [];
-    let absentCount = 0;
+  const url = "https://wa.me/?text=" + encodeURIComponent(msg);
+  window.open(url, "_blank");
+}
 
-    staffIds.forEach(id => {
-      const s = staffData[id];
-      
-      if (s.isAbsent) {
-        absentCount++;
-        return; 
-      }
+function exportCSV() {
+  const list = getEntries();
+  if (list.length === 0) return alert("Koi data nahi hai");
+  let csv = "Staff,Date,Status,NTB Count,Result,Remarks\n";
+  list.forEach(e => {
+    const result = e.status === "absent" ? "Absent"
+      : e.count >= 2 ? "Top" : e.count === 1 ? "Achieved" : "Missed";
+    csv += `"${e.staff}","${e.date}","${e.status}",${e.count},"${result}","${e.remarks || ""}"\n`;
+  });
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `ntb_report_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
 
-      const dayLog = (s.logs && s.logs[reportDate]) ? s.logs[reportDate] : { opened: 0, ntb: 0 };
-      const dailyData = `Opened: ${dayLog.opened}, NTB: ${dayLog.ntb}`;
+function clearAll() {
+  if (!confirm("Saara data delete ho jayega. Sure?")) return;
+  localStorage.removeItem(KEY);
+  render();
+}
 
-      if(s.pending > 0) {
-        let r = s.lastRemark ? ` (${s.lastRemark})` : '';
-        pendingStaff.push(`- *${s.name}*: ${dailyData} | Pending: ${s.pending}${r}`);
-      } else {
-        clearStaff.push(`- *${s.name}*: ${dailyData} | (Clear)`);
-      }
-    });
-
-    text += `⚠️ *PENDING STAFF (${pendingStaff.length})*\n`;
-    text += pendingStaff.length ? pendingStaff.join('\n') + '\n\n' : "No pending staff.\n\n";
-
-    text += `✅ *CLEAR STAFF (${clearStaff.length})*\n`;
-    text += clearStaff.length ? clearStaff.join('\n') + '\n\n' : "No clear staff.\n\n";
-    
-    if(absentCount > 0) text += `🚫 *Absent Staff: ${absentCount} (Skipped)*`;
-
-    if (navigator.share) {
-      navigator.share({ title: 'Staff Report', text: text }).catch(() => {});
-    } else {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      alert('Report copy ho gayi! WhatsApp par paste karein.');
-    }
-  }
-
-  // Initial Renders
-  renderSummary();
-  updateMainDashboard();
-  renderSideMenuList();
+render();
 </script>
 </body>
 </html>
