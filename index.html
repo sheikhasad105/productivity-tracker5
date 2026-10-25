@@ -60,6 +60,11 @@
   .dropdown-menu { display: none; position: absolute; right: 0; top: 100%; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; min-width: 100px; margin-top: 4px; overflow: hidden; }
   .dropdown-menu button { display: block; width: 100%; text-align: left; padding: 10px 12px; background: none; border: none; color: #991b1b; font-size: 13px; cursor: pointer; font-weight: 500; border-radius: 0; }
   .dropdown-menu button:hover { background: #fee2e2; }
+
+  /* Rank Badge */
+  .rank-1 { color: #d97706; font-weight: bold; font-size: 16px; }
+  .rank-2 { color: #6b7280; font-weight: bold; font-size: 15px; }
+  .rank-3 { color: #b45309; font-weight: bold; font-size: 15px; }
 </style>
 </head>
 <body>
@@ -85,18 +90,30 @@
       <button class="btn-today" onclick="setToday()">Aaj ki Date</button>
     </div>
     
-    <div style="margin-bottom:12px;">
-      <input type="date" id="filterDate" onchange="render()">
+    <!-- View Mode & Date -->
+    <div class="row" style="margin-bottom:12px;">
+      <div style="flex:1;">
+        <label>Report Type</label>
+        <select id="viewMode" onchange="toggleView()">
+          <option value="daily">Daily (Rozana)</option>
+          <option value="weekly">Weekly (Haftawar)</option>
+          <option value="monthly">Monthly (Mahwar)</option>
+        </select>
+      </div>
+      <div style="flex:1;">
+        <label>Select Date</label>
+        <input type="date" id="filterDate" onchange="render()">
+      </div>
     </div>
     
     <div class="stats" id="stats"></div>
 
     <button class="btn-wa" onclick="shareWhatsApp()">📲 Share on WhatsApp</button>
-    <button class="btn-ghost" style="width:100%;" onclick="exportCSV()">Download CSV</button>
+    <button class="btn-ghost" style="width:100%;" onclick="exportCSV()">Download CSV (Daily)</button>
   </div>
 
   <div class="card">
-    <h3 style="font-size:14px;margin-bottom:12px;color:#374151;">Present Staff Report</h3>
+    <h3 style="font-size:14px;margin-bottom:12px;color:#374151;" id="tableTitle">Present Staff Report</h3>
     <div id="report"></div>
     <div id="absentBox" style="margin-top:16px;"></div>
   </div>
@@ -265,74 +282,149 @@ function statusBadge(e) {
   return `<span class="badge no">❌ 0 — Zero Prod</span>`;
 }
 
-// Button click par aaj ki date set karne ke liye function
 function setToday() {
   const today = new Date().toISOString().slice(0,10);
   document.getElementById("filterDate").value = today;
   render();
 }
 
-function render() {
-  const filterDate = document.getElementById("filterDate").value;
-  const list = getEntries().filter(e => e.date === filterDate);
+function toggleView() {
+  render();
+}
 
-  // Dynamic Title set karna (Today's Productivity vs Selected Date)
-  const todayStr = new Date().toISOString().slice(0,10);
+/* ---------- DATE RANGE HELPERS ---------- */
+function getWeekRange(dateStr) {
+  let d = new Date(dateStr);
+  let day = d.getDay() || 7; // Monday = 1, Sunday = 7
+  d.setDate(d.getDate() - day + 1); // Monday
+  let start = d.toISOString().slice(0,10);
+  d.setDate(d.getDate() + 6); // Sunday
+  let end = d.toISOString().slice(0,10);
+  return { start, end };
+}
+
+function getMonthRange(dateStr) {
+  let d = new Date(dateStr);
+  let year = d.getFullYear();
+  let month = d.getMonth();
+  let start = new Date(year, month, 1).toISOString().slice(0,10);
+  let end = new Date(year, month + 1, 0).toISOString().slice(0,10);
+  return { start, end };
+}
+
+/* ---------- RENDER DASHBOARD ---------- */
+function render() {
+  const viewMode = document.getElementById("viewMode").value;
+  const filterDate = document.getElementById("filterDate").value;
+  const allEntries = getEntries();
+
   const d = new Date(filterDate);
   const dayStr = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-  
   const titleEl = document.getElementById("dashTitle");
-  if (filterDate === todayStr) {
-    titleEl.innerHTML = `Today's Productivity <span style="font-size:12px;color:#6b7280;font-weight:normal;">(${dayStr})</span>`;
+
+  if (viewMode === "daily") {
+    // ---- DAILY LOGIC ----
+    const list = allEntries.filter(e => e.date === filterDate);
+    titleEl.innerHTML = `Daily Productivity <span style="font-size:12px;color:#6b7280;font-weight:normal;">(${dayStr})</span>`;
+    document.getElementById("tableTitle").innerText = "Daily Present Staff Report";
+
+    const present = list.filter(e => e.status === "present");
+    const absent  = list.filter(e => e.status === "absent");
+    const totalNTB = present.reduce((s,e)=> s + e.count, 0);
+    const topPerformers = present.filter(e => e.count >= 2).length; 
+    const targetMet = present.filter(e => e.count === 1).length; 
+    const zeroProd = present.filter(e => e.count === 0).length; 
+    
+    const topStaff = present.length ? present.reduce((a,b)=> b.count > a.count ? b : a) : null;
+    const topStaffName = (topStaff && topStaff.count > 0) ? topStaff.staff : "—";
+
+    document.getElementById("stats").innerHTML = `
+      <div class="stat"><div class="num">${totalNTB}</div><div class="lbl">Total NTB</div></div>
+      <div class="stat"><div class="num">${topPerformers}</div><div class="lbl">Top Performers</div></div>
+      <div class="stat"><div class="num">${targetMet}</div><div class="lbl">Target Met (1)</div></div>
+      <div class="stat"><div class="num">${zeroProd}</div><div class="lbl">Zero Productivity</div></div>
+      <div class="stat"><div class="num">${absent.length}</div><div class="lbl">Absent</div></div>
+      <div class="stat full"><div class="num">${topStaffName}</div><div class="lbl">🏆 Top Performer of the Day</div></div>
+    `;
+
+    if (present.length === 0) {
+      document.getElementById("report").innerHTML = `<div class="empty">Is date ke liye koi entry nahi hai.</div>`;
+    } else {
+      const sorted = [...present].sort((a,b)=> b.count - a.count);
+      let html = `<table><thead><tr><th>Staff</th><th>NTB</th><th>Status</th></tr></thead><tbody>`;
+      sorted.forEach(e => {
+        html += `<tr>
+          <td><strong>${e.staff}</strong><br><span style="font-size:11px;color:#9ca3af">${e.remarks || ""}</span></td>
+          <td>${e.count}</td>
+          <td>${statusBadge(e)}<br><button class="btn-ghost" style="margin-top:4px;padding:2px 6px;font-size:10px;width:auto;" onclick="delEntry('${e.id}')">Del</button></td>
+        </tr>`;
+      });
+      html += "</tbody></table>";
+      document.getElementById("report").innerHTML = html;
+    }
+
+    if (absent.length === 0) {
+      document.getElementById("absentBox").innerHTML = "";
+    } else {
+      let html = `<h4 style="font-size:12px;color:#6b7280;margin-bottom:8px;text-transform:uppercase;">Absent (${absent.length})</h4><div style="display:flex;flex-wrap:wrap;gap:8px;">`;
+      absent.forEach(e => {
+        html += `<span class="badge absent" style="padding:6px 12px;">${e.staff} <span onclick="delEntry('${e.id}')" style="cursor:pointer;margin-left:4px;color:#991b1b;">✕</span></span>`;
+      });
+      html += `</div>`;
+      document.getElementById("absentBox").innerHTML = html;
+    }
+
   } else {
-    titleEl.innerHTML = `Productivity <span style="font-size:12px;color:#6b7280;font-weight:normal;">(${dayStr})</span>`;
-  }
+    // ---- WEEKLY / MONTHLY LOGIC ----
+    let range = (viewMode === "weekly") ? getWeekRange(filterDate) : getMonthRange(filterDate);
+    let list = allEntries.filter(e => e.date >= range.start && e.date <= range.end);
+    
+    let modeText = (viewMode === "weekly") ? "Weekly" : "Monthly";
+    titleEl.innerHTML = `${modeText} Productivity <span style="font-size:12px;color:#6b7280;font-weight:normal;">(${range.start} to ${range.end})</span>`;
+    document.getElementById("tableTitle").innerText = `${modeText} Leaderboard (Top NTBs)`;
 
-  const present = list.filter(e => e.status === "present");
-  const absent  = list.filter(e => e.status === "absent");
-  const totalNTB = present.reduce((s,e)=> s + e.count, 0);
-  
-  const topPerformers = present.filter(e => e.count >= 2).length; 
-  const targetMet = present.filter(e => e.count === 1).length; 
-  const zeroProd = present.filter(e => e.count === 0).length; 
-  
-  const topStaff = present.length ? present.reduce((a,b)=> b.count > a.count ? b : a) : null;
-  const topStaffName = (topStaff && topStaff.count > 0) ? topStaff.staff : "—";
-
-  document.getElementById("stats").innerHTML = `
-    <div class="stat"><div class="num">${totalNTB}</div><div class="lbl">Total NTB</div></div>
-    <div class="stat"><div class="num">${topPerformers}</div><div class="lbl">Top Performers (2+)</div></div>
-    <div class="stat"><div class="num">${targetMet}</div><div class="lbl">Target Met (1)</div></div>
-    <div class="stat"><div class="num">${zeroProd}</div><div class="lbl">Zero Productivity</div></div>
-    <div class="stat"><div class="num">${absent.length}</div><div class="lbl">Absent</div></div>
-    <div class="stat full"><div class="num">${topStaffName}</div><div class="lbl">🏆 Top Performer of the Day</div></div>
-  `;
-
-  if (present.length === 0) {
-    document.getElementById("report").innerHTML = `<div class="empty">Is date ke liye koi present staff entry nahi hai.</div>`;
-  } else {
-    const sorted = [...present].sort((a,b)=> b.count - a.count);
-    let html = `<table><thead><tr><th>Staff</th><th>NTB</th><th>Status</th></tr></thead><tbody>`;
-    sorted.forEach(e => {
-      html += `<tr>
-        <td><strong>${e.staff}</strong><br><span style="font-size:11px;color:#9ca3af">${e.remarks || ""}</span></td>
-        <td>${e.count}</td>
-        <td>${statusBadge(e)}<br><button class="btn-ghost" style="margin-top:4px;padding:2px 6px;font-size:10px;width:auto;" onclick="delEntry('${e.id}')">Del</button></td>
-      </tr>`;
+    // Aggregate by staff
+    let staffData = {};
+    list.forEach(e => {
+      if (e.status === "present") {
+        if (!staffData[e.staff]) staffData[e.staff] = { ntb: 0 };
+        staffData[e.staff].ntb += e.count;
+      }
     });
-    html += "</tbody></table>";
-    document.getElementById("report").innerHTML = html;
-  }
 
-  if (absent.length === 0) {
-    document.getElementById("absentBox").innerHTML = "";
-  } else {
-    let html = `<h4 style="font-size:12px;color:#6b7280;margin-bottom:8px;text-transform:uppercase;">Absent (${absent.length})</h4><div style="display:flex;flex-wrap:wrap;gap:8px;">`;
-    absent.forEach(e => {
-      html += `<span class="badge absent" style="padding:6px 12px;">${e.staff} <span onclick="delEntry('${e.id}')" style="cursor:pointer;margin-left:4px;color:#991b1b;">✕</span></span>`;
-    });
-    html += `</div>`;
-    document.getElementById("absentBox").innerHTML = html;
+    // Convert to array and sort
+    let leaderboard = Object.keys(staffData).map(name => ({
+      staff: name,
+      ntb: staffData[name].ntb
+    })).sort((a,b) => b.ntb - a.ntb);
+
+    let totalNTB = leaderboard.reduce((s, e) => s + e.ntb, 0);
+    let topPerformers = leaderboard.filter(e => e.ntb >= 10).length; // Assuming 10+ is a milestone for month/week
+    let topStaffName = leaderboard.length > 0 ? leaderboard[0].staff : "—";
+
+    document.getElementById("stats").innerHTML = `
+      <div class="stat full"><div class="num">${totalNTB}</div><div class="lbl">Total NTB in this ${modeText}</div></div>
+      <div class="stat full"><div class="num">${topStaffName}</div><div class="lbl">🏆 Top Performer of the ${modeText}</div></div>
+    `;
+
+    if (leaderboard.length === 0) {
+      document.getElementById("report").innerHTML = `<div class="empty">Is duration mein koi entry nahi hai.</div>`;
+    } else {
+      let html = `<table><thead><tr><th>Rank</th><th>Staff</th><th>Total NTB</th></tr></thead><tbody>`;
+      leaderboard.forEach((e, index) => {
+        let rankClass = index === 0 ? "rank-1" : index === 1 ? "rank-2" : index === 2 ? "rank-3" : "";
+        let rankText = index === 0 ? "🥇 1st" : index === 1 ? "🥈 2nd" : index === 2 ? "🥉 3rd" : `${index + 1}th`;
+        
+        html += `<tr>
+          <td class="${rankClass}">${rankText}</td>
+          <td><strong>${e.staff}</strong></td>
+          <td><span class="badge star" style="font-size:13px;">⭐ ${e.ntb}</span></td>
+        </tr>`;
+      });
+      html += "</tbody></table>";
+      document.getElementById("report").innerHTML = html;
+    }
+    document.getElementById("absentBox").innerHTML = ""; // Hide absent in weekly/monthly
   }
 }
 
@@ -345,57 +437,74 @@ function delEntry(id) {
 
 /* ---------- WHATSAPP ---------- */
 function shareWhatsApp() {
+  const viewMode = document.getElementById("viewMode").value;
   const filterDate = document.getElementById("filterDate").value;
-  const list = getEntries().filter(e => e.date === filterDate);
+  const allEntries = getEntries();
 
-  if (list.length === 0) { return alert("Pehle is date ke liye entries karein."); }
+  if (viewMode === "daily") {
+    const list = allEntries.filter(e => e.date === filterDate);
+    if (list.length === 0) return alert("Pehle is date ke liye entries karein.");
 
-  const present = list.filter(e => e.status === "present").sort((a,b)=> b.count - a.count);
-  const absent  = list.filter(e => e.status === "absent");
-  
-  const topStaff = present.filter(e => e.count >= 2); 
-  const targetMetStaff = present.filter(e => e.count === 1); 
-  const zeroProdStaff = present.filter(e => e.count === 0); 
-  
-  const totalNTB = present.reduce((s,e)=> s + e.count, 0);
+    const present = list.filter(e => e.status === "present").sort((a,b)=> b.count - a.count);
+    const absent  = list.filter(e => e.status === "absent");
+    const topStaff = present.filter(e => e.count >= 2); 
+    const targetMetStaff = present.filter(e => e.count === 1); 
+    const zeroProdStaff = present.filter(e => e.count === 0); 
+    const totalNTB = present.reduce((s,e)=> s + e.count, 0);
 
-  const d = new Date(filterDate);
-  const dayStr = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    const d = new Date(filterDate);
+    const dayStr = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
-  let msg = `*NTB Daily Report*\n📅 ${dayStr}\n\n`;
-  msg += `📊 *Summary*\n`;
-  msg += `• Total NTB: *${totalNTB}*\n`;
-  msg += `• Top Performers (2+): ${topStaff.length}\n`;
-  msg += `• Target Met (1): ${targetMetStaff.length}\n`; 
-  msg += `• Zero Productivity: ${zeroProdStaff.length}\n`;
-  msg += `• Absent: ${absent.length}\n\n`;
+    let msg = `*NTB Daily Report*\n📅 ${dayStr}\n\n`;
+    msg += `📊 *Summary*\n• Total NTB: *${totalNTB}*\n• Top Performers: ${topStaff.length}\n• Target Met (1): ${targetMetStaff.length}\n• Zero Productivity: ${zeroProdStaff.length}\n• Absent: ${absent.length}\n\n`;
 
-  if (topStaff.length > 0) {
-    msg += `🏆 *Top Performing Staff*\n`;
-    topStaff.forEach(e => { msg += `⭐ ${e.staff}: ${e.count}${e.remarks ? ` (${e.remarks})` : ""}\n`; });
-    msg += `\n`;
-  }
+    if (topStaff.length > 0) {
+      msg += `🏆 *Top Performing Staff*\n`;
+      topStaff.forEach(e => { msg += `⭐ ${e.staff}: ${e.count}\n`; }); msg += `\n`;
+    }
+    if (targetMetStaff.length > 0) {
+      msg += `✅ *Target Met (1)*\n`;
+      targetMetStaff.forEach(e => { msg += `✅ ${e.staff}\n`; }); msg += `\n`;
+    }
+    if (zeroProdStaff.length > 0) {
+      msg += `❌ *Zero Productivity*\n`;
+      zeroProdStaff.forEach(e => { msg += `• ${e.staff}\n`; }); msg += `\n`;
+    }
+    if (absent.length > 0) {
+      msg += `🚫 *Absent*\n`;
+      absent.forEach(e => { msg += `• ${e.staff}\n`; });
+    }
+    window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
 
-  if (targetMetStaff.length > 0) {
-    msg += `✅ *Target Met (1)*\n`; 
-    targetMetStaff.forEach(e => {
-      msg += `✅ ${e.staff}${e.remarks ? ` (${e.remarks})` : ""}\n`;
+  } else {
+    // Weekly / Monthly Share
+    let range = (viewMode === "weekly") ? getWeekRange(filterDate) : getMonthRange(filterDate);
+    let list = allEntries.filter(e => e.date >= range.start && e.date <= range.end);
+    if (list.length === 0) return alert("Is duration mein koi entry nahi hai.");
+
+    let staffData = {};
+    list.forEach(e => {
+      if (e.status === "present") {
+        if (!staffData[e.staff]) staffData[e.staff] = { ntb: 0 };
+        staffData[e.staff].ntb += e.count;
+      }
     });
-    msg += `\n`;
-  }
 
-  if (zeroProdStaff.length > 0) {
-    msg += `❌ *Zero Productivity*\n`;
-    zeroProdStaff.forEach(e => { msg += `• ${e.staff}${e.remarks ? ` (${e.remarks})` : ""}\n`; });
-    msg += `\n`;
-  }
+    let leaderboard = Object.keys(staffData).map(name => ({ staff: name, ntb: staffData[name].ntb })).sort((a,b) => b.ntb - a.ntb);
+    let totalNTB = leaderboard.reduce((s, e) => s + e.ntb, 0);
+    let modeText = (viewMode === "weekly") ? "Weekly" : "Monthly";
 
-  if (absent.length > 0) {
-    msg += `🚫 *Absent*\n`;
-    absent.forEach(e => { msg += `• ${e.staff}${e.remarks ? ` (${e.remarks})` : ""}\n`; });
-  }
+    let msg = `*NTB ${modeText} Report*\n📅 ${range.start} to ${range.end}\n\n`;
+    msg += `📊 *Total NTB:* ${totalNTB}\n\n`;
+    msg += `🏆 *Top Performers Leaderboard*\n`;
 
-  window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+    leaderboard.forEach((e, index) => {
+      let rank = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`;
+      msg += `${rank} ${e.staff}: *${e.ntb} NTBs*\n`;
+    });
+
+    window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+  }
 }
 
 /* ---------- EXPORT CSV ---------- */
