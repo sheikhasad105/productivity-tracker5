@@ -32,7 +32,6 @@
   .btn-ghost { background: #e5e7eb; color: #111; }
   .btn-wa { background: #25D366; color: #fff; }
   .btn-wa:hover { background: #1da851; }
-  .btn-danger { background: #fee2e2; color: #991b1b; padding: 6px 10px; font-size: 12px; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; }
   .row > * { flex: 1; min-width: 140px; }
   .hidden { display: none !important; }
@@ -53,15 +52,35 @@
   .stat .lbl { font-size: 12px; color: #6b7280; }
   .top { background: #fffbeb; border: 1px solid #fde68a; }
   .empty { text-align: center; color: #9ca3af; padding: 24px; }
+  
+  /* Staff Chips & 3-Dot Menu CSS */
+  .staff-chip-wrap {
+    position: relative; display: inline-block; margin: 4px 4px 0 0;
+  }
   .staff-chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #f3f4f6; padding: 6px 10px; border-radius: 20px;
-    font-size: 13px; margin: 4px 4px 0 0;
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #f3f4f6; padding: 6px 12px; border-radius: 20px;
+    font-size: 13px;
   }
-  .staff-chip button {
-    background: transparent; color: #991b1b;
-    padding: 0; font-size: 14px; line-height: 1;
+  .dots-btn {
+    background: transparent; color: #6b7280;
+    padding: 0 4px; font-size: 16px; line-height: 1; border: none; cursor: pointer;
   }
+  .dots-btn:hover { color: #111; }
+  
+  /* Dropdown Menu */
+  .dropdown-menu {
+    display: none; position: absolute; right: 0; top: 100%;
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; min-width: 100px;
+    margin-top: 4px; overflow: hidden;
+  }
+  .dropdown-menu button {
+    display: block; width: 100%; text-align: left; padding: 10px 12px;
+    background: none; border: none; color: #991b1b; font-size: 13px; cursor: pointer;
+    font-weight: 500; border-radius: 0;
+  }
+  .dropdown-menu button:hover { background: #fee2e2; }
 </style>
 </head>
 <body>
@@ -81,7 +100,7 @@
         <button class="btn-primary" style="width:100%;margin-bottom:12px;" onclick="addStaff()">+ Add Staff</button>
       </div>
     </div>
-    <div id="staffList"></div>
+    <div id="staffList" style="margin-top:8px;"></div>
   </div>
 
   <!-- ENTRY FORM -->
@@ -169,6 +188,8 @@ function deleteStaff(name) {
   renderStaff();
   renderStaffDropdown();
 }
+
+/* Updated renderStaff with 3-dot menu */
 function renderStaff() {
   const list = getStaff();
   const box = document.getElementById("staffList");
@@ -176,12 +197,39 @@ function renderStaff() {
     box.innerHTML = `<p style="color:#9ca3af;font-size:13px;">Abhi koi staff add nahi hua. Upar se naam likh kar add karein.</p>`;
     return;
   }
-  box.innerHTML = list.map(n =>
-    `<span class="staff-chip">${n}
-      <button onclick="deleteStaff('${n.replace(/'/g,"\\'")}')" title="Delete">✕</button>
-    </span>`
-  ).join("");
+  
+  box.innerHTML = list.map((n, index) => {
+    const safeName = n.replace(/'/g, "\\'");
+    return `
+    <div class="staff-chip-wrap">
+      <div class="staff-chip">
+        ${n}
+        <button class="dots-btn" onclick="toggleMenu(event, ${index})">⋮</button>
+      </div>
+      <div class="dropdown-menu" id="menu-${index}">
+        <button onclick="deleteStaff('${safeName}')">Delete</button>
+      </div>
+    </div>`;
+  }).join("");
 }
+
+/* Toggle 3-dot menu */
+function toggleMenu(e, index) {
+  e.stopPropagation();
+  // Close all other menus
+  document.querySelectorAll('.dropdown-menu').forEach(el => el.style.display = 'none');
+  // Toggle current
+  const menu = document.getElementById(`menu-${index}`);
+  if (menu) {
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  }
+}
+
+/* Close menu when clicking outside */
+document.addEventListener('click', function() {
+  document.querySelectorAll('.dropdown-menu').forEach(el => el.style.display = 'none');
+});
+
 function renderStaffDropdown() {
   const sel = document.getElementById("staff");
   const current = sel.value;
