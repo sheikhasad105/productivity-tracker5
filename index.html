@@ -189,7 +189,6 @@ function deleteStaff(name) {
   renderStaffDropdown();
 }
 
-/* Updated renderStaff with 3-dot menu */
 function renderStaff() {
   const list = getStaff();
   const box = document.getElementById("staffList");
@@ -213,19 +212,15 @@ function renderStaff() {
   }).join("");
 }
 
-/* Toggle 3-dot menu */
 function toggleMenu(e, index) {
   e.stopPropagation();
-  // Close all other menus
   document.querySelectorAll('.dropdown-menu').forEach(el => el.style.display = 'none');
-  // Toggle current
   const menu = document.getElementById(`menu-${index}`);
   if (menu) {
     menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
   }
 }
 
-/* Close menu when clicking outside */
 document.addEventListener('click', function() {
   document.querySelectorAll('.dropdown-menu').forEach(el => el.style.display = 'none');
 });
@@ -279,11 +274,12 @@ function addEntry() {
   render();
 }
 
+/* Yahan Badge text change kiya hai */
 function statusBadge(e) {
   if (e.status === "absent") return `<span class="badge absent">Absent</span>`;
   if (e.count >= 2) return `<span class="badge star">⭐ ${e.count} — Top</span>`;
   if (e.count === 1) return `<span class="badge ok">✅ 1 — Achieved</span>`;
-  return `<span class="badge no">❌ 0 — Missed</span>`;
+  return `<span class="badge no">❌ 0 — Zero Productivity</span>`;
 }
 
 function render() {
@@ -294,15 +290,17 @@ function render() {
   const absent  = list.filter(e => e.status === "absent");
   const totalNTB = present.reduce((s,e)=> s + e.count, 0);
   const achieved = present.filter(e => e.count >= 1).length;
-  const missed   = present.filter(e => e.count === 0).length;
+  const zeroProd = present.filter(e => e.count === 0).length; // renamed from missed
+  
   const topStaff = present.length
     ? present.reduce((a,b)=> b.count > a.count ? b : a)
     : null;
 
+  /* Summary me label change kiya hai */
   document.getElementById("stats").innerHTML = `
     <div class="stat"><div class="num">${totalNTB}</div><div class="lbl">Total NTB</div></div>
     <div class="stat"><div class="num">${achieved}</div><div class="lbl">Achieved</div></div>
-    <div class="stat"><div class="num">${missed}</div><div class="lbl">Missed (0)</div></div>
+    <div class="stat"><div class="num">${zeroProd}</div><div class="lbl">Zero Productivity</div></div>
     <div class="stat"><div class="num">${absent.length}</div><div class="lbl">Absent</div></div>
     <div class="stat top"><div class="num">${topStaff ? topStaff.staff : "—"}</div><div class="lbl">Top Performer</div></div>
   `;
@@ -366,16 +364,17 @@ function shareWhatsApp() {
   const absent  = list.filter(e => e.status === "absent");
   const totalNTB = present.reduce((s,e)=> s + e.count, 0);
   const achieved = present.filter(e => e.count >= 1).length;
-  const missed   = present.filter(e => e.count === 0).length;
+  const zeroProd = present.filter(e => e.count === 0).length;
 
   const d = new Date(filterDate);
   const dayStr = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
+  /* WhatsApp message me text change kiya hai */
   let msg = `*NTB Daily Report*\n📅 ${dayStr}\n\n`;
   msg += `📊 *Summary*\n`;
   msg += `• Total NTB: *${totalNTB}*\n`;
   msg += `• Achieved (1+): ${achieved}\n`;
-  msg += `• Missed (0): ${missed}\n`;
+  msg += `• Zero Productivity: ${zeroProd}\n`;
   msg += `• Absent: ${absent.length}\n\n`;
 
   if (present.length > 0) {
@@ -398,13 +397,15 @@ function shareWhatsApp() {
   window.open(url, "_blank");
 }
 
+/* ---------- EXPORT CSV ---------- */
 function exportCSV() {
   const list = getEntries();
   if (list.length === 0) return alert("Koi data nahi hai");
   let csv = "Staff,Date,Status,NTB Count,Result,Remarks\n";
   list.forEach(e => {
+    /* CSV ke result me text change kiya hai */
     const result = e.status === "absent" ? "Absent"
-      : e.count >= 2 ? "Top" : e.count === 1 ? "Achieved" : "Missed";
+      : e.count >= 2 ? "Top" : e.count === 1 ? "Achieved" : "Zero Productivity";
     csv += `"${e.staff}","${e.date}","${e.status}",${e.count},"${result}","${e.remarks || ""}"\n`;
   });
   const blob = new Blob([csv], { type: "text/csv" });
