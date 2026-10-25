@@ -28,7 +28,8 @@
   button { padding: 10px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
   .btn-primary { background: #2563eb; color: #fff; width: 100%; }
   .btn-wa { background: #25D366; color: #fff; width: 100%; margin-bottom: 8px; font-size: 15px;}
-  .btn-ghost { background: #f3f4f6; color: #374151; width: 100%; }
+  .btn-ghost { background: #f3f4f6; color: #374151; }
+  .btn-today { background: #e0e7ff; color: #3730a3; padding: 6px 12px; font-size: 12px; border-radius: 6px; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; }
   .row > * { flex: 1; min-width: 140px; }
   .hidden { display: none !important; }
@@ -79,19 +80,23 @@
 <!-- 1. DASHBOARD TAB -->
 <div id="tab-dashboard" class="tab-content active">
   <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h3 style="font-size:15px; color:#1f2937;" id="dashTitle">Today's Productivity</h3>
+      <button class="btn-today" onclick="setToday()">Aaj ki Date</button>
+    </div>
+    
     <div style="margin-bottom:12px;">
-      <label>Select Date</label>
       <input type="date" id="filterDate" onchange="render()">
     </div>
     
     <div class="stats" id="stats"></div>
 
     <button class="btn-wa" onclick="shareWhatsApp()">📲 Share on WhatsApp</button>
-    <button class="btn-ghost" onclick="exportCSV()">Download CSV</button>
+    <button class="btn-ghost" style="width:100%;" onclick="exportCSV()">Download CSV</button>
   </div>
 
   <div class="card">
-    <h3 style="font-size:14px;margin-bottom:12px;color:#374151;">Present Staff</h3>
+    <h3 style="font-size:14px;margin-bottom:12px;color:#374151;">Present Staff Report</h3>
     <div id="report"></div>
     <div id="absentBox" style="margin-top:16px;"></div>
   </div>
@@ -247,7 +252,6 @@ function addEntry() {
   document.getElementById("remarks").value = "";
   document.getElementById("count").value = 1;
   
-  // Entry save hone ke baad wapas dashboard par le jayein
   document.getElementById("filterDate").value = date;
   render();
   switchTab('dashboard', document.querySelectorAll('.tab-btn')[0]);
@@ -257,28 +261,51 @@ function addEntry() {
 function statusBadge(e) {
   if (e.status === "absent") return `<span class="badge absent">Absent</span>`;
   if (e.count >= 2) return `<span class="badge star">⭐ ${e.count} — Top</span>`;
-  if (e.count === 1) return `<span class="badge ok">✅ 1 — Top Performing</span>`;
+  if (e.count === 1) return `<span class="badge ok">✅ 1 — Target Met</span>`;
   return `<span class="badge no">❌ 0 — Zero Prod</span>`;
+}
+
+// Button click par aaj ki date set karne ke liye function
+function setToday() {
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById("filterDate").value = today;
+  render();
 }
 
 function render() {
   const filterDate = document.getElementById("filterDate").value;
   const list = getEntries().filter(e => e.date === filterDate);
 
+  // Dynamic Title set karna (Today's Productivity vs Selected Date)
+  const todayStr = new Date().toISOString().slice(0,10);
+  const d = new Date(filterDate);
+  const dayStr = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  
+  const titleEl = document.getElementById("dashTitle");
+  if (filterDate === todayStr) {
+    titleEl.innerHTML = `Today's Productivity <span style="font-size:12px;color:#6b7280;font-weight:normal;">(${dayStr})</span>`;
+  } else {
+    titleEl.innerHTML = `Productivity <span style="font-size:12px;color:#6b7280;font-weight:normal;">(${dayStr})</span>`;
+  }
+
   const present = list.filter(e => e.status === "present");
   const absent  = list.filter(e => e.status === "absent");
   const totalNTB = present.reduce((s,e)=> s + e.count, 0);
-  const topPerformers = present.filter(e => e.count >= 1).length; 
+  
+  const topPerformers = present.filter(e => e.count >= 2).length; 
+  const targetMet = present.filter(e => e.count === 1).length; 
   const zeroProd = present.filter(e => e.count === 0).length; 
   
   const topStaff = present.length ? present.reduce((a,b)=> b.count > a.count ? b : a) : null;
+  const topStaffName = (topStaff && topStaff.count > 0) ? topStaff.staff : "—";
 
   document.getElementById("stats").innerHTML = `
     <div class="stat"><div class="num">${totalNTB}</div><div class="lbl">Total NTB</div></div>
-    <div class="stat"><div class="num">${topPerformers}</div><div class="lbl">Top Performing</div></div>
+    <div class="stat"><div class="num">${topPerformers}</div><div class="lbl">Top Performers (2+)</div></div>
+    <div class="stat"><div class="num">${targetMet}</div><div class="lbl">Target Met (1)</div></div>
     <div class="stat"><div class="num">${zeroProd}</div><div class="lbl">Zero Productivity</div></div>
     <div class="stat"><div class="num">${absent.length}</div><div class="lbl">Absent</div></div>
-    <div class="stat full"><div class="num">${topStaff ? topStaff.staff : "—"}</div><div class="lbl">🏆 Top Performer of the Day</div></div>
+    <div class="stat full"><div class="num">${topStaffName}</div><div class="lbl">🏆 Top Performer of the Day</div></div>
   `;
 
   if (present.length === 0) {
@@ -325,9 +352,11 @@ function shareWhatsApp() {
 
   const present = list.filter(e => e.status === "present").sort((a,b)=> b.count - a.count);
   const absent  = list.filter(e => e.status === "absent");
-  const ntbStaff = present.filter(e => e.count >= 1);
-  const zeroProdStaff = present.filter(e => e.count === 0);
-  const topStaff = present.filter(e => e.count > 1);
+  
+  const topStaff = present.filter(e => e.count >= 2); 
+  const targetMetStaff = present.filter(e => e.count === 1); 
+  const zeroProdStaff = present.filter(e => e.count === 0); 
+  
   const totalNTB = present.reduce((s,e)=> s + e.count, 0);
 
   const d = new Date(filterDate);
@@ -336,7 +365,8 @@ function shareWhatsApp() {
   let msg = `*NTB Daily Report*\n📅 ${dayStr}\n\n`;
   msg += `📊 *Summary*\n`;
   msg += `• Total NTB: *${totalNTB}*\n`;
-  msg += `• Top Performing (1+): ${ntbStaff.length}\n`;
+  msg += `• Top Performers (2+): ${topStaff.length}\n`;
+  msg += `• Target Met (1): ${targetMetStaff.length}\n`; 
   msg += `• Zero Productivity: ${zeroProdStaff.length}\n`;
   msg += `• Absent: ${absent.length}\n\n`;
 
@@ -346,11 +376,10 @@ function shareWhatsApp() {
     msg += `\n`;
   }
 
-  if (ntbStaff.length > 0) {
-    msg += `✅ *Top Performing Staff (NTB)*\n`;
-    ntbStaff.forEach(e => {
-      const mark = e.count > 1 ? "⭐" : "✅";
-      msg += `${mark} ${e.staff}: ${e.count}${e.remarks ? ` (${e.remarks})` : ""}\n`;
+  if (targetMetStaff.length > 0) {
+    msg += `✅ *Target Met (1)*\n`; 
+    targetMetStaff.forEach(e => {
+      msg += `✅ ${e.staff}${e.remarks ? ` (${e.remarks})` : ""}\n`;
     });
     msg += `\n`;
   }
@@ -375,7 +404,10 @@ function exportCSV() {
   if (list.length === 0) return alert("Koi data nahi hai");
   let csv = "Staff,Date,Status,NTB Count,Result,Remarks\n";
   list.forEach(e => {
-    const result = e.status === "absent" ? "Absent" : e.count >= 2 ? "Top" : e.count === 1 ? "Top Performing" : "Zero Productivity";
+    const result = e.status === "absent" ? "Absent" 
+      : e.count >= 2 ? "Top Performer" 
+      : e.count === 1 ? "Target Met" 
+      : "Zero Productivity";
     csv += `"${e.staff}","${e.date}","${e.status}",${e.count},"${result}","${e.remarks || ""}"\n`;
   });
   const blob = new Blob([csv], { type: "text/csv" });
