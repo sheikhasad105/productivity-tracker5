@@ -5,469 +5,635 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NTB Productivity Dashboard</title>
+
 <style>
-:root{--navy:#102a43;--blue:#1769aa;--teal:#087f70;--bg:#f2f5fa;--line:#e2e8f0;--red:#c62828}
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:#172b4d}
-header{background:linear-gradient(120deg,#102a43,#1769aa);color:white;padding:22px 16px}
-.wrap{max-width:1150px;margin:auto;padding:0 14px}
-h1{margin:0 0 8px;font-size:25px}
-header p{margin:0;font-size:14px}
-.status{margin-top:12px;font-size:12px}
-nav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
-button{border:0;border-radius:9px;padding:11px 14px;font-weight:bold;cursor:pointer}
-nav button{background:#e2eaf4;color:#102a43}
-nav button.active,.primary{background:var(--blue);color:white}
-.green{background:var(--teal);color:white}
-.secondary{background:#e2eaf4;color:#102a43}
-.danger{background:#ffebee;color:var(--red)}
-.panel{display:none}.panel.active{display:block}
-.card,.metric{background:white;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.metric small{display:block;color:#667085;margin-bottom:8px}
-.metric strong{font-size:25px;overflow-wrap:anywhere}
-.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-label{display:block;font-size:13px;font-weight:bold;margin:0 0 6px}
-input,select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;background:white;font-size:14px}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-h2{font-size:19px;margin:0 0 14px}
-h3{font-size:16px}
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px}
-table{border-collapse:collapse;width:100%;min-width:500px;font-size:13px}
-th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line)}
-th{background:#f7f9fc}
-.rank{display:flex;align-items:center;gap:10px;margin:12px 0}
-.rank-name{min-width:125px;font-weight:bold;overflow-wrap:anywhere}
-.bar{height:10px;background:#e7edf5;border-radius:20px;flex:1;overflow:hidden}
-.bar span{height:100%;display:block;background:var(--teal)}
-.rank-count{min-width:35px;text-align:right;font-weight:bold}
-.top-card{background:#f7f9fc;border:1px solid var(--line);border-radius:10px;padding:14px}
-.top-card strong{display:block;margin:7px 0}
-.empty{padding:15px;text-align:center;color:#667085}
-.foot{text-align:center;font-size:12px;color:#667085;padding:15px}
-@media(max-width:700px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fields{grid-template-columns:1fr}h1{font-size:21px}.rank-name{min-width:95px;font-size:12px}}
+:root {
+  --navy:#102a43;
+  --blue:#1769aa;
+  --teal:#0f766e;
+  --bg:#f3f6fb;
+  --card:#ffffff;
+  --text:#172b4d;
+  --muted:#667085;
+  --line:#e4eaf2;
+  --red:#c62828;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:var(--bg);
+  font-family:Arial,sans-serif;
+  color:var(--text);
+}
+header {
+  background:linear-gradient(120deg,#102a43,#1769aa);
+  color:white;
+  padding:22px 16px;
+}
+.wrap { max-width:1150px; margin:auto; padding:0 14px; }
+h1 { margin:0 0 6px; font-size:25px; }
+header p { margin:0; font-size:14px; }
+.status {
+  display:inline-block;
+  margin-top:12px;
+  padding:7px 12px;
+  border:1px solid #ffffff55;
+  border-radius:20px;
+  font-size:12px;
+  overflow-wrap:anywhere;
+}
+nav { display:flex; gap:8px; flex-wrap:wrap; margin:18px 0; }
+button {
+  border:0;
+  border-radius:9px;
+  padding:11px 14px;
+  font-weight:bold;
+  cursor:pointer;
+}
+nav button { background:#e8eef6; color:var(--navy); }
+nav button.active,.primary { background:var(--blue); color:white; }
+.secondary { background:#e8eef6; color:var(--navy); }
+.green { background:var(--teal); color:white; }
+.danger { background:#ffebee; color:var(--red); }
+.panel { display:none; }
+.panel.active { display:block; }
+.card,.metric {
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 4px 16px #102a4308;
+}
+.grid {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+.metric small { display:block; color:var(--muted); margin-bottom:8px; }
+.metric strong { font-size:26px; }
+.fields {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+label { display:block; font-size:13px; font-weight:bold; margin-bottom:6px; }
+input,select {
+  width:100%;
+  padding:11px;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  background:white;
+  color:var(--text);
+  font-size:14px;
+}
+.actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+h2 { font-size:19px; margin:0 0 14px; }
+h3 { font-size:16px; }
+.table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:9px; }
+table { width:100%; border-collapse:collapse; min-width:520px; font-size:13px; }
+th,td { padding:11px 9px; border-bottom:1px solid var(--line); text-align:left; }
+th { background:#f7f9fc; }
+.empty { text-align:center; padding:20px; color:var(--muted); }
+.rank { display:flex; align-items:center; gap:10px; margin:12px 0; }
+.rank-name { min-width:125px; font-weight:bold; overflow-wrap:anywhere; }
+.bar { flex:1; height:10px; background:#e7edf5; border-radius:20px; overflow:hidden; }
+.bar span { display:block; height:100%; background:var(--teal); }
+.rank-count { min-width:30px; text-align:right; font-weight:bold; }
+.foot { text-align:center; color:var(--muted); font-size:12px; padding:16px; }
+#errorBox {
+  display:none;
+  background:#ffebee;
+  color:#9b1c1c;
+  border:1px solid #ffcdd2;
+  border-radius:10px;
+  padding:12px;
+  margin:14px 0;
+  overflow-wrap:anywhere;
+  font-size:13px;
+}
+@media(max-width:760px) {
+  .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .fields { grid-template-columns:1fr; }
+  h1 { font-size:21px; }
+  .metric strong { font-size:23px; }
+}
 </style>
 </head>
+
 <body>
 <header>
-<div class="wrap">
-<h1>NTB Productivity Dashboard</h1>
-<p>Daily Entries · Staff Ranking · Reports · WhatsApp</p>
-<div class="status" id="connectionStatus">Connecting to Firebase...</div>
-</div>
+  <div class="wrap">
+    <h1>NTB Productivity Dashboard</h1>
+    <p>Daily Entries, Staff Ranking and Performance Reports</p>
+    <div class="status" id="connectionStatus">Starting Firebase connection…</div>
+  </div>
 </header>
 
 <main class="wrap">
-<nav>
-<button class="active" data-tab="dashboard">Dashboard</button>
-<button data-tab="entry">Daily Entry</button>
-<button data-tab="staff">Staff Management</button>
-<button data-tab="reports">Reports & Export</button>
-</nav>
+  <div id="errorBox"></div>
 
-<section id="dashboard" class="panel active">
-<div class="grid">
-<div class="metric"><small>Today's NTBs</small><strong id="todayTotal">0</strong></div>
-<div class="metric"><small>This Month</small><strong id="monthTotal">0</strong></div>
-<div class="metric"><small>Total Staff</small><strong id="staffTotal">0</strong></div>
-<div class="metric"><small>This Month's Entries</small><strong id="monthEntries">0</strong></div>
-</div>
-<div class="card">
-<h2>Daily Ranking</h2>
-<div id="dailyRanking"></div>
-</div>
-<div class="card">
-<h2>Monthly Staff Ranking</h2>
-<div id="ranking"></div>
-</div>
-<div class="card">
-<h2>Monthly Top 3</h2>
-<div id="monthlyTop3" class="grid"></div>
-</div>
-<div class="card">
-<h2>Month-on-Month Comparison</h2>
-<div id="monthComparison" class="grid"></div>
-</div>
-<div class="card">
-<h2>Recent Entries</h2>
-<div class="table-wrap"><table>
-<thead><tr><th>Date</th><th>Staff</th><th>NTBs</th><th>Note</th></tr></thead>
-<tbody id="recentRows"></tbody>
-</table></div>
-</div>
-</section>
+  <nav>
+    <button class="active" data-tab="dashboard">Dashboard</button>
+    <button data-tab="entry">Daily Entry</button>
+    <button data-tab="staff">Staff Management</button>
+    <button data-tab="reports">Reports & Export</button>
+  </nav>
 
-<section id="entry" class="panel">
-<div class="card">
-<h2>Add Daily NTB Entry</h2>
-<form id="entryForm">
-<div class="fields">
-<div><label for="entryDate">Date</label><input id="entryDate" type="date" required></div>
-<div><label for="entryStaff">Staff Member</label><select id="entryStaff" required><option value="">Add staff first</option></select></div>
-<div><label for="entryCount">Number of NTBs</label><input id="entryCount" type="number" min="0" step="1" value="0" required></div>
-</div>
-<div style="margin-top:12px"><label for="entryNote">Note (optional)</label><input id="entryNote" maxlength="180" placeholder="Daily performance"></div>
-<div class="actions"><button class="primary" type="submit">Save Entry</button><button class="secondary" type="reset">Clear</button></div>
-</form>
-</div>
-<div class="card">
-<h2>Today's Entries</h2>
-<div class="table-wrap"><table>
-<thead><tr><th>Staff</th><th>NTBs</th><th>Note</th><th>Action</th></tr></thead>
-<tbody id="todayRows"></tbody>
-</table></div>
-</div>
-</section>
+  <section id="dashboard" class="panel active">
+    <div class="grid">
+      <div class="metric"><small>Today's NTBs</small><strong id="todayTotal">0</strong></div>
+      <div class="metric"><small>This Month's NTBs</small><strong id="monthTotal">0</strong></div>
+      <div class="metric"><small>Staff Members</small><strong id="staffTotal">0</strong></div>
+      <div class="metric"><small>Entries This Month</small><strong id="monthEntries">0</strong></div>
+    </div>
 
-<section id="staff" class="panel">
-<div class="card">
-<h2>Add Staff Member</h2>
-<form id="staffForm">
-<div class="fields">
-<div><label for="staffName">Staff Name</label><input id="staffName" maxlength="80" required></div>
-<div><label for="staffRole">Role (optional)</label><input id="staffRole" maxlength="80" placeholder="e.g. CSR / BM"></div>
-<div style="display:flex;align-items:end"><button class="primary" type="submit">Add Staff</button></div>
-</div>
-</form>
-</div>
-<div class="card">
-<h2>Current Staff</h2>
-<div class="table-wrap"><table>
-<thead><tr><th>Name</th><th>Role</th><th>Action</th></tr></thead>
-<tbody id="staffRows"></tbody>
-</table></div>
-</div>
-</section>
+    <div class="card">
+      <h2>Monthly Staff Ranking</h2>
+      <div id="ranking" class="empty">Waiting for data…</div>
+    </div>
 
-<section id="reports" class="panel">
-<div class="card">
-<h2>Productivity Reports</h2>
-<label for="periodType">Report Period</label>
-<select id="periodType">
-<option value="daily">Daily</option>
-<option value="weekly">Weekly — Last 7 Days</option>
-<option value="monthly">Monthly — Month to Date</option>
-<option value="custom">Custom Date Range</option>
-</select>
-<div class="fields" style="margin-top:12px">
-<div><label for="startDate">Start Date</label><input id="startDate" type="date"></div>
-<div><label for="endDate">End Date</label><input id="endDate" type="date"></div>
-<div><label for="reportStaff">Staff Member</label><select id="reportStaff"><option value="all">All Staff</option></select></div>
-</div>
-<div class="actions">
-<button class="primary" id="applyReport" type="button">Show Report</button>
-<button class="green" id="shareWa" type="button">Share on WhatsApp</button>
-<button class="secondary" id="exportCsv" type="button">Export CSV</button>
-</div>
-</div>
+    <div class="card">
+      <h2>Recent Entries</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Staff</th><th>NTBs</th><th>Note</th></tr></thead>
+          <tbody id="recentRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
-<div class="grid">
-<div class="metric"><small>Total NTBs</small><strong id="reportTotal">0</strong></div>
-<div class="metric"><small>Total Entries</small><strong id="reportCount">0</strong></div>
-<div class="metric"><small>Zero Productivity</small><strong id="zeroCount">0</strong></div>
-<div class="metric"><small>Selected Period</small><strong id="periodLabel" style="font-size:15px">—</strong></div>
-</div>
+  <section id="entry" class="panel">
+    <div class="card">
+      <h2>Add Daily NTB Entry</h2>
+      <form id="entryForm">
+        <div class="fields">
+          <div>
+            <label for="entryDate">Date</label>
+            <input id="entryDate" type="date" required>
+          </div>
+          <div>
+            <label for="entryStaff">Staff Member</label>
+            <select id="entryStaff" required>
+              <option value="">Select staff</option>
+            </select>
+          </div>
+          <div>
+            <label for="entryCount">Number of NTB Accounts</label>
+            <input id="entryCount" type="number" min="0" step="1" value="0" required>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <label for="entryNote">Note (optional)</label>
+          <input id="entryNote" maxlength="180" placeholder="Daily performance">
+        </div>
+        <div class="actions">
+          <button class="primary" type="submit">Save Entry</button>
+          <button class="secondary" type="reset">Clear</button>
+        </div>
+      </form>
+    </div>
 
-<div class="card"><h2>Staff Ranking</h2><div id="reportRanking"></div></div>
-<div class="card"><h2>Zero Productivity</h2><div id="zeroStaff"></div></div>
-<div class="card">
-<h2>Report Details</h2>
-<div class="table-wrap"><table>
-<thead><tr><th>Date</th><th>Staff</th><th>NTBs</th><th>Note</th></tr></thead>
-<tbody id="reportRows"></tbody>
-</table></div>
-</div>
-</section>
+    <div class="card">
+      <h2>Today's Entries</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Staff</th><th>NTBs</th><th>Note</th><th>Action</th></tr></thead>
+          <tbody id="todayRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
-<div class="foot">NTB Productivity Dashboard · Firebase Firestore</div>
+  <section id="staff" class="panel">
+    <div class="card">
+      <h2>Add Staff Member</h2>
+      <form id="staffForm">
+        <div class="fields">
+          <div>
+            <label for="staffName">Staff Name</label>
+            <input id="staffName" maxlength="80" required>
+          </div>
+          <div>
+            <label for="staffRole">Role (optional)</label>
+            <input id="staffRole" maxlength="80" placeholder="e.g. CSR / BM">
+          </div>
+          <div style="display:flex;align-items:end">
+            <button class="primary" type="submit">Add Staff</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Current Staff</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Role</th><th>Action</th></tr></thead>
+          <tbody id="staffRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="reports" class="panel">
+    <div class="card">
+      <h2>Reports & Ranking</h2>
+
+      <div class="fields">
+        <div>
+          <label for="reportType">Report Period</label>
+          <select id="reportType">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly — Last 7 Days</option>
+            <option value="monthly">Monthly — Month to Date</option>
+            <option value="custom">Custom Date Range</option>
+          </select>
+        </div>
+        <div>
+          <label for="reportStart">Start Date</label>
+          <input id="reportStart" type="date">
+        </div>
+        <div>
+          <label for="reportEnd">End Date</label>
+          <input id="reportEnd" type="date">
+        </div>
+      </div>
+
+      <div class="fields" style="margin-top:12px">
+        <div>
+          <label for="reportStaff">Staff Filter</label>
+          <select id="reportStaff"><option value="all">All Staff</option></select>
+        </div>
+        <div style="display:flex;align-items:end">
+          <button id="applyReport" class="primary" type="button">Show Report</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="green" id="shareWa" type="button">Share Report via WhatsApp</button>
+        <button class="secondary" id="exportCsv" type="button">Download CSV</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="metric"><small>Total NTBs</small><strong id="reportTotal">0</strong></div>
+      <div class="metric"><small>Total Entries</small><strong id="reportCount">0</strong></div>
+      <div class="metric"><small>Productive Staff</small><strong id="productiveCount">0</strong></div>
+      <div class="metric"><small>Zero Productivity</small><strong id="zeroCount">0</strong></div>
+    </div>
+
+    <div class="card">
+      <h2>Staff Ranking</h2>
+      <div id="reportRanking" class="empty">No report yet.</div>
+    </div>
+
+    <div class="card">
+      <h2>Zero Productivity Staff</h2>
+      <div id="zeroStaff" class="empty">No report yet.</div>
+    </div>
+
+    <div class="card">
+      <h2>Report Details</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Staff</th><th>NTBs</th><th>Note</th></tr></thead>
+          <tbody id="reportRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">NTB Productivity Dashboard · Firebase Cloud Firestore</div>
 </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import {
- getFirestore, collection, addDoc, deleteDoc, doc,
- onSnapshot, serverTimestamp, query, orderBy
-} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-import { getAuth, signInAnonymously, onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
-// Existing Firebase project configuration
+import {
+  getFirestore, collection, addDoc, deleteDoc, doc,
+  onSnapshot, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+import {
+  getAuth, signInAnonymously, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+/* Existing Firebase project configuration */
 const firebaseConfig = {
- apiKey: "AIzaSyBKO2Rr0SSLKsUY5vpXIyNrxGgG5jems4Yg",
- authDomain: "ntb-productivity-dashboard.firebaseapp.com",
- projectId: "ntb-productivity-dashboard",
- storageBucket: "ntb-productivity-dashboard.firebasestorage.app",
- messagingSenderId: "1035962618814",
- appId: "1:1035962618814:web:0050f3158f5d62e9c35fef",
- measurementId: "G-3J09H3TRBZ"
+  apiKey: "AIzaSyBKO2Rr0SSLKsUY5vpXIyNrxGgG5jems4Yg",
+  authDomain: "ntb-productivity-dashboard.firebaseapp.com",
+  projectId: "ntb-productivity-dashboard",
+  storageBucket: "ntb-productivity-dashboard.firebasestorage.app",
+  messagingSenderId: "1035962618814",
+  appId: "1:1035962618814:web:0050f3158f5d62e9c35fef",
+  measurementId: "G-3J09H3TRBZ"
 };
 
 const $ = id => document.getElementById(id);
+
 const localDate = () => {
- const d = new Date();
- return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 };
+
 const localMonth = () => localDate().slice(0,7);
-const safe = v => String(v ?? '').replace(/[&<>"']/g,c=>({
- '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+
+const safe = value => String(value ?? "").replace(/[&<>"']/g, c => ({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
 }[c]));
-const total = rows => rows.reduce((n,e)=>n+Number(e.count||0),0);
 
-let db, auth, currentUser;
+const sum = rows => rows.reduce((total,e) => total + Number(e.count || 0),0);
+
+let db, auth, currentUser = null;
 let staff = [], entries = [];
-let unsubscribeStaff, unsubscribeEntries;
 let reportRowsCache = [];
+let unsubscribeStaff = null, unsubscribeEntries = null;
+let authObserverStarted = false;
 
-function status(message,bad=false) {
- $('connectionStatus').textContent = message;
- $('connectionStatus').style.color = bad ? '#ffd6d6' : '#ffffff';
+function showStatus(message, isError = false) {
+  $("connectionStatus").textContent = message;
+  $("connectionStatus").style.color = isError ? "#ffd6d6" : "#ffffff";
 }
-function blankRow(cols,msg) {
- return `<tr><td colspan="${cols}" class="empty">${msg}</td></tr>`;
+
+function showError(message) {
+  const box = $("errorBox");
+  box.style.display = "block";
+  box.textContent = message;
 }
-function monthBefore(month) {
- const [y,m] = month.split('-').map(Number);
- const d = new Date(y,m-2,1);
- return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+
+function clearError() {
+  $("errorBox").style.display = "none";
+  $("errorBox").textContent = "";
 }
-function refreshSelects() {
- const options = staff.slice().sort((a,b)=>a.name.localeCompare(b.name))
- .map(s=>`<option value="${safe(s.id)}">${safe(s.name)}${s.role?' — '+safe(s.role):''}</option>`).join('');
- $('entryStaff').innerHTML = `<option value="">Select staff</option>${options}`;
- const old = $('reportStaff').value || 'all';
- $('reportStaff').innerHTML = `<option value="all">All Staff</option>${options}`;
- if ([...$('reportStaff').options].some(o=>o.value===old)) $('reportStaff').value=old;
+
+function blankRow(columns,message) {
+  return `<tr><td colspan="${columns}" class="empty">${safe(message)}</td></tr>`;
 }
-function rankingHTML(list) {
- const max = Math.max(1,...list.map(s=>s.total));
- if (!list.length) return '<div class="empty">No staff added yet.</div>';
- return list.map((s,i)=>`
- <div class="rank">
- <span class="rank-name">${s.total>0&&i===0?'🥇':s.total>0&&i===1?'🥈':s.total>0&&i===2?'🥉':(i+1)+'.'} ${safe(s.name)}</span>
- <div class="bar"><span style="width:${Math.min(100,s.total/max*100)}%"></span></div>
- <span class="rank-count">${s.total}</span>
- </div>`).join('');
+
+function refreshStaffSelects() {
+  const oldReportValue = $("reportStaff").value || "all";
+  const options = staff.slice()
+    .sort((a,b) => a.name.localeCompare(b.name))
+    .map(s => `<option value="${safe(s.id)}">${safe(s.name)}${s.role ? " — " + safe(s.role) : ""}</option>`)
+    .join("");
+
+  $("entryStaff").innerHTML = `<option value="">Select staff</option>${options}`;
+  $("reportStaff").innerHTML = `<option value="all">All Staff</option>${options}`;
+
+  if ([...$("reportStaff").options].some(o => o.value === oldReportValue)) {
+    $("reportStaff").value = oldReportValue;
+  }
 }
-function staffTotals(rows) {
- return staff.map(s=>({
- id:s.id,name:s.name,
- total:rows.filter(e=>e.staffId===s.id).reduce((n,e)=>n+Number(e.count||0),0)
- })).sort((a,b)=>b.total-a.total||a.name.localeCompare(b.name));
+
+function getPeriod() {
+  const type = $("reportType").value;
+  const today = localDate();
+
+  if (type === "daily") {
+    const d = $("reportStart").value || today;
+    return {start:d,end:d,label:"Daily"};
+  }
+
+  if (type === "weekly") {
+    const end = new Date(today + "T12:00:00");
+    const start = new Date(end);
+    start.setDate(start.getDate() - 6);
+    const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    return {start:fmt(start),end:fmt(end),label:"Weekly"};
+  }
+
+  if (type === "monthly") {
+    return {start:localMonth()+"-01",end:today,label:"Monthly"};
+  }
+
+  const start = $("reportStart").value;
+  const end = $("reportEnd").value;
+
+  if (!start || !end) {
+    throw new Error("Please select both start date and end date.");
+  }
+  if (start > end) {
+    throw new Error("Start date cannot be after end date.");
+  }
+
+  return {start,end,label:"Custom Date Range"};
 }
-function render() {
- const today = localDate();
- const thisMonth = entries.filter(e=>(e.date||'').startsWith(localMonth()));
- const todayEntries = entries.filter(e=>e.date===today);
 
- $('todayTotal').textContent=total(todayEntries);
- $('monthTotal').textContent=total(thisMonth);
- $('staffTotal').textContent=staff.length;
- $('monthEntries').textContent=thisMonth.length;
+function getReportData() {
+  const period = getPeriod();
+  const selectedStaff = $("reportStaff").value || "all";
 
- $('dailyRanking').innerHTML=rankingHTML(staffTotals(todayEntries));
- const monthlyRanking=staffTotals(thisMonth);
- $('ranking').innerHTML=rankingHTML(monthlyRanking);
+  const rows = entries.filter(e =>
+    e.date >= period.start &&
+    e.date <= period.end &&
+    (selectedStaff === "all" || e.staffId === selectedStaff)
+  ).sort((a,b) =>
+    (a.date || "").localeCompare(b.date || "") ||
+    (a.staffName || "").localeCompare(b.staffName || "")
+  );
 
- const medals=['🥇','🥈','🥉'];
- const top=monthlyRanking.filter(s=>s.total>0).slice(0,3);
- $('monthlyTop3').innerHTML=top.length?top.map((s,i)=>`
- <div class="top-card"><div style="font-size:26px">${medals[i]}</div>
- <strong>${safe(s.name)}</strong><span>${s.total} NTBs</span></div>`).join(''):
- '<div class="empty">No NTBs recorded this month.</div>';
+  const relevantStaff = selectedStaff === "all"
+    ? staff
+    : staff.filter(s => s.id === selectedStaff);
 
- const prev=monthBefore(localMonth());
- const prevTotal=total(entries.filter(e=>(e.date||'').startsWith(prev)));
- const currTotal=total(thisMonth);
- const delta=currTotal-prevTotal;
- $('monthComparison').innerHTML=`
- <div class="metric"><small>This Month (${localMonth()})</small><strong>${currTotal}</strong></div>
- <div class="metric"><small>Previous Month (${prev})</small><strong>${prevTotal}</strong></div>
- <div class="metric"><small>Difference</small><strong>${delta>0?'+':''}${delta}</strong></div>`;
+  const ranking = relevantStaff.map(s => ({
+    id:s.id,
+    name:s.name,
+    total:rows.filter(e => e.staffId === s.id)
+      .reduce((n,e) => n + Number(e.count || 0),0)
+  })).sort((a,b) => b.total - a.total || a.name.localeCompare(b.name));
 
- const recent=entries.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,8);
- $('recentRows').innerHTML=recent.length?recent.map(e=>`
- <tr><td>${safe(e.date)}</td><td>${safe(e.staffName)}</td>
- <td>${Number(e.count||0)}</td><td>${safe(e.note||'—')}</td></tr>`).join(''):blankRow(4,'No entries yet.');
-
- $('todayRows').innerHTML=todayEntries.length?todayEntries.map(e=>`
- <tr><td>${safe(e.staffName)}</td><td>${Number(e.count||0)}</td>
- <td>${safe(e.note||'—')}</td><td><button class="danger" data-delete-entry="${safe(e.id)}">Delete</button></td></tr>`).join(''):blankRow(4,'No entries today.');
-
- $('staffRows').innerHTML=staff.length?staff.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`
- <tr><td>${safe(s.name)}</td><td>${safe(s.role||'—')}</td>
- <td><button class="danger" data-delete-staff="${safe(s.id)}">Delete</button></td></tr>`).join(''):blankRow(3,'No staff added.');
-
- runReport();
+  return {period,rows,ranking};
 }
-function getReportDates() {
- const type=$('periodType').value;
- const today=localDate();
- let start=$('startDate').value||today;
- let end=$('endDate').value||today;
 
- if(type==='daily') start=end=today;
- if(type==='weekly') {
-  const d=new Date(today+'T12:00:00');
-  d.setDate(d.getDate()-6);
-  start=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  end=today;
- }
- if(type==='monthly') {
-  start=today.slice(0,7)+'-01';
-  end=today;
- }
- if(start>end) [start,end]=[end,start];
- return {start,end};
+function renderRanking(targetId, ranking) {
+  const target = $(targetId);
+  if (!ranking.length) {
+    target.innerHTML = '<div class="empty">No staff members found.</div>';
+    return;
+  }
+
+  const max = Math.max(1,...ranking.map(r => r.total));
+
+  target.innerHTML = ranking.map((r,i) => {
+    const medal = r.total > 0
+      ? (i===0 ? "🥇 " : i===1 ? "🥈 " : i===2 ? "🥉 " : "")
+      : "";
+    const width = Math.max(0,Math.min(100,r.total/max*100));
+
+    return `<div class="rank">
+      <span class="rank-name">${medal}${i+1}. ${safe(r.name)}</span>
+      <div class="bar"><span style="width:${width}%"></span></div>
+      <span class="rank-count">${r.total}</span>
+    </div>`;
+  }).join("");
 }
-function getReport() {
- const {start,end}=getReportDates();
- const sid=$('reportStaff').value||'all';
- const rows=entries.filter(e=>e.date>=start&&e.date<=end&&(sid==='all'||e.staffId===sid));
- return {start,end,rows,ranking:staffTotals(rows)};
+
+function renderDashboard() {
+  const today = localDate();
+  const month = localMonth();
+  const monthRows = entries.filter(e => (e.date || "").startsWith(month));
+
+  $("todayTotal").textContent = sum(entries.filter(e => e.date === today));
+  $("monthTotal").textContent = sum(monthRows);
+  $("staffTotal").textContent = staff.length;
+  $("monthEntries").textContent = monthRows.length;
+
+  const monthlyRanking = staff.map(s => ({
+    id:s.id,
+    name:s.name,
+    total:monthRows.filter(e => e.staffId === s.id)
+      .reduce((n,e) => n + Number(e.count || 0),0)
+  })).sort((a,b) => b.total - a.total || a.name.localeCompare(b.name));
+
+  renderRanking("ranking",monthlyRanking);
+
+  const recent = entries.slice()
+    .sort((a,b) => (b.date || "").localeCompare(a.date || ""))
+    .slice(0,8);
+
+  $("recentRows").innerHTML = recent.length
+    ? recent.map(e => `<tr>
+        <td>${safe(e.date)}</td>
+        <td>${safe(e.staffName)}</td>
+        <td>${Number(e.count || 0)}</td>
+        <td>${safe(e.note || "—")}</td>
+      </tr>`).join("")
+    : blankRow(4,"No entries yet.");
+
+  const todays = entries.filter(e => e.date === today)
+    .sort((a,b) => (a.staffName || "").localeCompare(b.staffName || ""));
+
+  $("todayRows").innerHTML = todays.length
+    ? todays.map(e => `<tr>
+        <td>${safe(e.staffName)}</td>
+        <td>${Number(e.count || 0)}</td>
+        <td>${safe(e.note || "—")}</td>
+        <td><button class="danger" data-delete-entry="${safe(e.id)}" type="button">Delete</button></td>
+      </tr>`).join("")
+    : blankRow(4,"No entries for today.");
+
+  $("staffRows").innerHTML = staff.length
+    ? staff.slice().sort((a,b) => a.name.localeCompare(b.name)).map(s => `<tr>
+        <td>${safe(s.name)}</td>
+        <td>${safe(s.role || "—")}</td>
+        <td><button class="danger" data-delete-staff="${safe(s.id)}" type="button">Delete</button></td>
+      </tr>`).join("")
+    : blankRow(3,"No staff members added yet.");
 }
+
 function runReport() {
- const {start,end,rows,ranking}=getReport();
- reportRowsCache=rows;
- $('reportTotal').textContent=total(rows);
- $('reportCount').textContent=rows.length;
- $('periodLabel').textContent=start===end?start:`${start} to ${end}`;
- const zero=ranking.filter(s=>s.total===0);
- $('zeroCount').textContent=zero.length;
- $('reportRanking').innerHTML=rankingHTML(ranking);
- $('zeroStaff').innerHTML=zero.length?zero.map(s=>`
- <div class="rank"><span class="rank-name">${safe(s.name)}</span><span class="rank-count">0 NTBs</span></div>`).join(''):
- '<div class="empty">No zero-productivity staff.</div>';
- $('reportRows').innerHTML=rows.length?rows.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`
- <tr><td>${safe(e.date)}</td><td>${safe(e.staffName)}</td>
- <td>${Number(e.count||0)}</td><td>${safe(e.note||'—')}</td></tr>`).join(''):blankRow(4,'No records found.');
+  try {
+    const {period,rows,ranking} = getReportData();
+    reportRowsCache = rows;
+
+    $("reportTotal").textContent = sum(rows);
+    $("reportCount").textContent = rows.length;
+    $("productiveCount").textContent = ranking.filter(s => s.total > 0).length;
+
+    const zeros = ranking.filter(s => s.total === 0);
+    $("zeroCount").textContent = zeros.length;
+
+    renderRanking("reportRanking",ranking);
+
+    $("zeroStaff").innerHTML = zeros.length
+      ? zeros.map(s => `<div style="padding:7px 0">${safe(s.name)} — 0 NTBs</div>`).join("")
+      : '<div class="empty">All selected staff recorded productivity.</div>';
+
+    $("reportRows").innerHTML = rows.length
+      ? rows.map(e => `<tr>
+          <td>${safe(e.date)}</td>
+          <td>${safe(e.staffName)}</td>
+          <td>${Number(e.count || 0)}</td>
+          <td>${safe(e.note || "—")}</td>
+        </tr>`).join("")
+      : blankRow(4,"No records found for this period.");
+
+    clearError();
+    return {period,rows,ranking};
+  } catch (err) {
+    showError(err.message || "Could not generate report.");
+    return null;
+  }
 }
-function setDefaultDates() {
- const today=localDate();
- const type=$('periodType').value;
- if(type==='daily') {$('startDate').value=today;$('endDate').value=today;}
- else if(type==='monthly') {$('startDate').value=today.slice(0,7)+'-01';$('endDate').value=today;}
- else if(type==='weekly') {
-  const d=new Date(today+'T12:00:00');d.setDate(d.getDate()-6);
-  $('startDate').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  $('endDate').value=today;
- } else {
-  $('startDate').value=$('startDate').value||today;
-  $('endDate').value=$('endDate').value||today;
- }
+
+function renderAll() {
+  renderDashboard();
+  runReport();
 }
-document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{
- document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));
- document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.tab));
-}));
 
-$('periodType').addEventListener('change',()=>{setDefaultDates();runReport();});
-$('startDate').addEventListener('change',()=>{if($('periodType').value==='custom')runReport();});
-$('endDate').addEventListener('change',()=>{if($('periodType').value==='custom')runReport();});
-$('reportStaff').addEventListener('change',runReport);
-$('applyReport').addEventListener('click',runReport);
+function startListeners(user) {
+  if (!user) return;
 
-$('staffForm').addEventListener('submit',async ev=>{
- ev.preventDefault();
- if(!db||!currentUser)return alert('Firebase is not ready.');
- const name=$('staffName').value.trim();
- const role=$('staffRole').value.trim();
- if(!name)return;
- try {
-  await addDoc(collection(db,'ntb_staff'),{name,role,createdAt:serverTimestamp(),createdBy:currentUser.uid});
-  $('staffForm').reset();
- } catch(e){alert('Could not save staff: '+e.code);}
-});
-$('entryForm').addEventListener('submit',async ev=>{
- ev.preventDefault();
- if(!db||!currentUser)return alert('Firebase is not ready.');
- const staffId=$('entryStaff').value;
- const s=staff.find(x=>x.id===staffId);
- const date=$('entryDate').value;
- const count=Number($('entryCount').value);
- if(!s||!date||!Number.isInteger(count)||count<0)return alert('Please check the entry.');
- try {
-  await addDoc(collection(db,'ntb_entries'),{
-   date,staffId,staffName:s.name,count,
-   note:$('entryNote').value.trim(),
-   createdAt:serverTimestamp(),createdBy:currentUser.uid
-  });
-  $('entryCount').value='0';$('entryNote').value='';
- } catch(e){alert('Could not save entry: '+e.code);}
-});
-document.addEventListener('click',async ev=>{
- const de=ev.target.closest('[data-delete-entry]');
- if(de){
-  if(!confirm('Delete this entry?'))return;
-  try{await deleteDoc(doc(db,'ntb_entries',de.dataset.deleteEntry));}
-  catch(e){alert('Could not delete entry: '+e.code);}
- }
- const ds=ev.target.closest('[data-delete-staff]');
- if(ds){
-  if(!confirm('Delete staff member? Historical entries will remain.'))return;
-  try{await deleteDoc(doc(db,'ntb_staff',ds.dataset.deleteStaff));}
-  catch(e){alert('Could not delete staff: '+e.code);}
- }
-});
+  currentUser = user;
 
-$('exportCsv').addEventListener('click',()=>{
- const {start,end,rows,ranking}=getReport();
- const csvRows=[
-  ['NTB Productivity Report',start,end],
-  ['Ranking','Staff','NTBs'],
-  ...ranking.map((s,i)=>[i+1,s.name,s.total]),
-  [],
-  ['Date','Staff','NTBs','Note'],
-  ...rows.map(e=>[e.date,e.staffName,e.count,e.note||''])
- ];
- const csv='\ufeff'+csvRows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
- const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
- const url=URL.createObjectURL(blob);
- const a=document.createElement('a');
- a.href=url;a.download=`NTB-report-${start}-to-${end}.csv`;
- a.click();URL.revokeObjectURL(url);
-});
+  if (unsubscribeStaff) unsubscribeStaff();
+  if (unsubscribeEntries) unsubscribeEntries();
 
-$('shareWa').addEventListener('click',()=>{
- const {start,end,rows,ranking}=getReport();
- const sumTotal=total(rows);
- const productive=ranking.filter(s=>s.total>0);
- const zero=ranking.filter(s=>s.total===0);
- const lines=[
-  'NTB PRODUCTIVITY REPORT',
-  `Period: ${start} to ${end}`,
-  `Total NTBs: ${sumTotal}`,
-  `Total entries: ${rows.length}`,
-  '',
-  'STAFF RANKING',
-  ...(productive.length?productive.map((s,i)=>
-   `${i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`} ${s.name}: ${s.total} NTBs`
-  ):['No NTBs recorded in this period.']),
-  '',
-  `ZERO PRODUCTIVITY (${zero.length})`,
-  ...(zero.length?zero.map(s=>`${s.name}: 0 NTBs`):['None']),
-  '',
-  'Report generated by NTB Productivity Dashboard'
- ];
- const url='https://wa.me/?text='+encodeURIComponent(lines.join('\n'));
- window.open(url,'_blank','noopener');
-});
+  showStatus("Signed in. Loading staff data…");
+  clearError();
 
-async function startApp(){
- try{
-  const app=initializeApp(firebaseConfig);
-  db=getFirestore(app);
-  auth=getAuth(app);
-  await signInAnonymously(auth);
-  onAuthStateChanged(auth,user=>{
-   if(!user)return;
-   currentUser=user;
-   if(unsubscribeStaff)unsubscribeStaff();
-   if(unsubscribeEntries)unsubscribeEntries();
+  unsubscribeStaff = onSnapshot(
+    collection(db,"ntb_staff"),
+    snapshot => {
+      staff = snapshot.docs.map(d => ({id:d.id,...d.data()}));
+      refreshStaffSelects();
+      renderAll();
+      showStatus("Connected to Firebase");
+      clearError();
+    },
+    error => {
+      console.error("Staff listener error:",error);
+      showStatus("Staff data error: " + (error.code || "unknown"),true);
+      showError("Staff data could not be loaded. Error: " +
+        (error.code || error.message) +
+        ". Check Firestore Rules and Firebase project configuration.");
+    }
+  );
 
-   unsubscribeStaff=onSnapshot(collection(db,'ntb_staff'),snap=>{
-    staff=snap.docs.map(d=>({id:d.id,...d.data()}));
-    refreshSelects();render();status('Connected to Firebase');
-   },err=>status('Staff data error: '+err.code,true));
+  unsubscribeEntries = onSnapshot(
+    query(collection(db,"ntb_entries"),orderBy("date","desc")),
+    snapshot => {
+      entries = snapshot.docs.map(d => ({id:d.id,...d.data()}));
+      renderAll();
+      showStatus("Connected to Firebase");
+      clearError();
+    },
+    error => {
+      console.error("Entries listener error:",error);
+      showStatus("Entry data error: " + (error.code || "unknown"),true);
+      showError("NTB entries could not be loaded. Error: " +
+        (error.code || error.message) +
+        ". Check Firestore Rules and confirm existing entries have a date field.");
+    }
+  );
+}
 
-   unsubscribeEntries=onSnapshot(query(collection(db,'ntb_entries'),orderBy('date','desc')),snap=>{
-    entries=snap.docs.map(d=>({id:d.i
+async function startApp() {
+  try {
+    showStatus("Initializing Firebase…");
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+
+    onAuthStateChanged(auth,user => {
+      if (user) {
+        startListeners(user);
+      } else {
+        showStatus("Signing in anonymously…");
+      }
+    },error => {
+      console.error("Authentication state error:",error);
+      showStatus("Authentication error: " + (error.code || "unknown"),true);
+      showError("Firebase Authentication failed: " +
+        (error.code || error.message) +
+        ". Confirm Anonymous sign-in is enabled and the domain is authorized.");
+    });
+
+    if (!auth.currentUser) {
+      showStatus("Signing in to Firebase…");
+      await signInAnonymously(auth);
+    }
+  } catch (error)
