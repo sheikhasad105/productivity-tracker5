@@ -72,7 +72,7 @@ table{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}th,td{p
 <div class="card"><h2>Current Staff</h2><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Action</th></tr></thead><tbody id="staffRows"></tbody></table></div></div>
 </section>
 <section id="reports" class="panel">
-<div class="card"><h2>Filter Report</h2><div class="fields"><div><label for="reportMonth">Month</label><input id="reportMonth" type="month"></div><div><label for="reportStaff">Staff</label><select id="reportStaff"><option value="all">All Staff</option></select></div><div style="display:flex;align-items:end"><button id="applyReport" class="primary" type="button">Show Report</button></div></div>
+<div class="card"><h2>Filter Report</h2><div class="fields"><div><label for="reportStartDate">From Date</label><input id="reportStartDate" type="date"></div><div><label for="reportEndDate">To Date</label><input id="reportEndDate" type="date"></div><div><label for="reportStaff">Staff Filter (optional)</label><select id="reportStaff"><option value="all">All Staff</option></select></div><div style="display:flex;align-items:end"><button id="applyReport" class="primary" type="button">Show Report</button></div></div>
 <div class="actions"><button class="green" id="exportCsv" type="button">Download CSV / Excel-compatible File</button><button class="secondary" id="shareWa" type="button">Share via WhatsApp</button></div></div>
 <div class="grid"><div class="metric"><small>NTBs in Selected Report</small><strong id="reportTotal">0</strong></div><div class="metric"><small>Entries in Selected Report</small><strong id="reportCount">0</strong></div></div>
 <div class="card" style="margin-top:14px"><h2>Report Details</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Staff</th><th>NTBs</th><th>Note</th></tr></thead><tbody id="reportRows"></tbody></table></div></div>
@@ -129,8 +129,8 @@ function render(){
  runReport();
 }
 function runReport(){
- const month=$('reportMonth').value||localMonth(),sid=$('reportStaff').value||'all';
- reportRowsCache=entries.filter(e=>(e.date||'').startsWith(month)&&(sid==='all'||e.staffId===sid)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+ const start=$('reportStartDate').value||localDate(),end=$('reportEndDate').value||start,sid=$('reportStaff').value||'all';
+ reportRowsCache=entries.filter(e=>(e.date||'')>=start&&(e.date||'')<=end&&(sid==='all'||e.staffId===sid)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
  $('reportTotal').textContent=sum(reportRowsCache);$('reportCount').textContent=reportRowsCache.length;
  $('reportRows').innerHTML=reportRowsCache.length?reportRowsCache.map(e=>`<tr><td>${safe(e.date)}</td><td>${safe(e.staffName)}</td><td>${Number(e.count||0)}</td><td>${safe(e.note||'—')}</td></tr>`).join(''):blankRow(4,'No records found for this filter.');
 }
@@ -147,7 +147,7 @@ async function startApp(){
  }catch(err){console.error(err);showStatus('Connection failed: '+(err.code||err.message),true);alert('Firebase connection failed. Check that Anonymous sign-in is enabled and Firestore rules allow authenticated access. Error: '+(err.code||err.message));}
 }
 document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.tab));}));
-$('entryDate').value=localDate();$('reportMonth').value=localMonth();
+$('entryDate').value=localDate();$('reportStartDate').value=localDate();$('reportEndDate').value=localDate();
 $('staffForm').addEventListener('submit',async ev=>{ev.preventDefault();if(!db||!currentUser)return alert('Firebase connection is not ready yet.');const name=$('staffName').value.trim(),role=$('staffRole').value.trim();if(!name)return;try{await addDoc(collection(db,'ntb_staff'),{name,role,createdAt:serverTimestamp(),createdBy:currentUser.uid});$('staffForm').reset();}catch(e){alert('Could not save staff: '+e.code);}});
 $('entryForm').addEventListener('submit',async ev=>{ev.preventDefault();if(!db||!currentUser)return alert('Firebase connection is not ready yet.');const staffId=$('entryStaff').value,s=staff.find(x=>x.id===staffId),date=$('entryDate').value,count=Number($('entryCount').value);if(!s||!date||!Number.isInteger(count)||count<0)return alert('Please enter valid information.');try{await addDoc(collection(db,'ntb_entries'),{date,staffId,staffName:s.name,count,note:$('entryNote').value.trim(),createdAt:serverTimestamp(),createdBy:currentUser.uid});$('entryCount').value='0';$('entryNote').value='';}catch(e){alert('Could not save entry: '+e.code);}});
 document.addEventListener('click',async ev=>{
@@ -158,32 +158,28 @@ $('applyReport').addEventListener('click',runReport);
 $('exportCsv').addEventListener('click',()=>{
  runReport();const rows=[['Date','Staff','NTBs','Note'],...reportRowsCache.map(e=>[e.date,e.staffName,e.count,e.note||''])];
  const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
- const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`NTB-report-${$('reportMonth').value||localMonth()}.csv`;a.click();URL.revokeObjectURL(url);
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`NTB-report-${$('reportStartDate').value||localDate()}-to-${$('reportEndDate').value||$('reportStartDate').value||localDate()}.csv`;a.click();URL.revokeObjectURL(url);
 });
 $('shareWa').addEventListener('click',()=>{
  runReport();
- const month=$('reportMonth').value||localMonth();
- const selectedStaff=$('reportStaff').value||'all';
- const staffLabel=selectedStaff==='all'?'All Staff':(staff.find(s=>s.id===selectedStaff)?.name||'Selected Staff');
+ const start=$('reportStartDate').value||localDate(),end=$('reportEndDate').value||start;
  const totalsByStaff=staff.map(s=>({
    name:s.name,
    total:reportRowsCache.filter(e=>e.staffId===s.id).reduce((n,e)=>n+Number(e.count||0),0)
- })).filter(s=>selectedStaff==='all'||staff.find(x=>x.id===selectedStaff)?.id===selectedStaff)
- .sort((a,b)=>b.total-a.total||a.name.localeCompare(b.name));
+ })).sort((a,b)=>b.total-a.total || a.name.localeCompare(b.name));
+ const total=sum(reportRowsCache);
+ const productive=totalsByStaff.filter(s=>s.total>0);
+ const formatDate=d=>{const [y,m,day]=d.split('-');return `${day}-${m}-${y}`;};
+ const dateLabel=start===end?formatDate(start):`${formatDate(start)} to ${formatDate(end)}`;
  const lines=[
-   '📊 NTB PRODUCTIVITY REPORT',
-   `📅 Month: ${month}`,
-   `👥 Staff: ${staffLabel}`,
-   `✅ Total NTBs: ${sum(reportRowsCache)}`,
-   `📝 Total Entries: ${reportRowsCache.length}`,
+   `📊 NTB PRODUCTIVITY REPORT`,
+   `📅 Date: ${dateLabel}`,
+   `✅ Total NTBs: ${total}`,
    '',
-   '🏆 STAFF-WISE RANKING',
-   ...(totalsByStaff.length?totalsByStaff.map((s,i)=>`${i+1}. ${s.name}: ${s.total} NTB(s)`):['No staff data available.']),
+   `🏆 STAFF-WISE RANKING`,
+   ...(productive.length?productive.map((s,i)=>`${i+1}. ${s.name}: ${s.total} NTB(s)`):['No NTBs recorded for selected date(s).']),
    '',
-   '📋 ENTRY DETAILS',
-   ...(reportRowsCache.length?reportRowsCache.map(e=>`• ${e.date} | ${e.staffName}: ${Number(e.count||0)} NTB(s)${e.note?' | '+e.note:''}`):['No records found for this report.']),
-   '',
-   'Shared from NTB Productivity Dashboard'
+   `Shared from NTB Productivity Dashboard`
  ];
  window.open('https://wa.me/?text='+encodeURIComponent(lines.join('\n')),'_blank','noopener');
 });
