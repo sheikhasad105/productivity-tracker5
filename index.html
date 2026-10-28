@@ -163,12 +163,15 @@ $('exportCsv').addEventListener('click',()=>{
 $('shareWa').addEventListener('click',()=>{
  runReport();
  const start=$('reportStartDate').value||localDate(),end=$('reportEndDate').value||start;
- const totalsByStaff=staff.map(s=>({
+ const selectedStaff=$('reportStaff').value||'all';
+ const staffForReport=selectedStaff==='all'?staff:staff.filter(s=>s.id===selectedStaff);
+ const totalsByStaff=staffForReport.map(s=>({
    name:s.name,
    total:reportRowsCache.filter(e=>e.staffId===s.id).reduce((n,e)=>n+Number(e.count||0),0)
  })).sort((a,b)=>b.total-a.total || a.name.localeCompare(b.name));
  const total=sum(reportRowsCache);
  const productive=totalsByStaff.filter(s=>s.total>0);
+ const zeroProductivity=totalsByStaff.filter(s=>s.total===0);
  const formatDate=d=>{const [y,m,day]=d.split('-');return `${day}-${m}-${y}`;};
  const dateLabel=start===end?formatDate(start):`${formatDate(start)} to ${formatDate(end)}`;
  const lines=[
@@ -178,6 +181,9 @@ $('shareWa').addEventListener('click',()=>{
    '',
    `🏆 STAFF-WISE RANKING`,
    ...(productive.length?productive.map((s,i)=>`${i+1}. ${s.name}: ${s.total} NTB(s)`):['No NTBs recorded for selected date(s).']),
+   '',
+   `⚠️ ZERO PRODUCTIVITY (${zeroProductivity.length})`,
+   ...(zeroProductivity.length?zeroProductivity.map(s=>`• ${s.name}: 0 NTBs`):['None']),
    '',
    `Shared from NTB Productivity Dashboard`
  ];
