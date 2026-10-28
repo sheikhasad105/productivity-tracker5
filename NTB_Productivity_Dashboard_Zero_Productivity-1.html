@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NTB Productivity Dashboard</title>
+<style>
+:root{--navy:#102a43;--blue:#1769aa;--teal:#0f766e;--bg:#f3f6fb;--card:#fff;--text:#172b4d;--muted:#667085;--line:#e4eaf2;--red:#c62828}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,Arial,sans-serif;color:var(--text)}
+header{background:linear-gradient(120deg,#102a43,#1769aa);color:#fff;padding:22px 16px}
+.wrap{max-width:1150px;margin:auto;padding:0 14px}
+header h1{margin:0 0 6px;font-size:25px}header p{margin:0;opacity:.9;font-size:14px}
+.status{display:inline-flex;gap:7px;align-items:center;margin-top:12px;background:#ffffff20;border:1px solid #ffffff40;border-radius:20px;padding:6px 11px;font-size:12px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+button{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:14px}
+nav button{background:#e8eef6;color:var(--navy)}nav button.active{background:var(--blue);color:#fff}
+main{padding:0 0 30px}.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:17px;margin-bottom:14px;box-shadow:0 4px 16px #102a4308}
+h2{font-size:19px;margin:0 0 14px}h3{font-size:16px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.metric{padding:16px;border-radius:14px;background:#fff;border:1px solid var(--line)}.metric small{color:var(--muted);display:block;margin-bottom:8px}.metric strong{font-size:27px}
+.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+input,select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;font-size:14px;color:var(--text)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.primary{background:var(--blue);color:white}.secondary{background:#e8eef6;color:var(--navy)}.green{background:var(--teal);color:white}.danger{background:#ffebee;color:var(--red)}
+.note{font-size:13px;color:var(--muted);line-height:1.7}.notice{padding:12px;border-radius:10px;background:#fff7e6;color:#7a4b00;font-size:13px;line-height:1.7;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:560px}th,td{padding:11px 9px;border-bottom:1px solid var(--line);text-align:left}th{background:#f7f9fc;color:#475467}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+.rank{display:flex;align-items:center;gap:10px;margin:10px 0}.rank-name{min-width:140px;font-weight:700}.bar{height:10px;background:#e7edf5;border-radius:20px;flex:1;overflow:hidden}.bar span{height:100%;display:block;background:linear-gradient(90deg,#0f766e,#39a7a0);border-radius:20px}.rank-count{min-width:35px;text-align:right;font-weight:700}
+.empty{padding:20px;text-align:center;color:var(--muted)}.foot{text-align:center;color:var(--muted);font-size:12px;padding:10px}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fields{grid-template-columns:1fr}.metric strong{font-size:23px}header h1{font-size:21px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>NTB Productivity Dashboard</h1>
+<p>Daily Entry, Staff Ranking, Monthly Reports and Performance Tracking</p>
+<div class="status"><span>●</span><span id="connectionStatus">Connecting to Firebase…</span></div>
+</div></header>
+<main class="wrap">
+<nav>
+<button class="active" data-tab="dashboard">Dashboard</button>
+<button data-tab="entry">Daily Entry</button>
+<button data-tab="staff">Staff Management</button>
+<button data-tab="reports">Reports & Export</button>
+</nav>
+<section id="dashboard" class="panel active">
+<div class="grid">
+<div class="metric"><small>Today's NTBs</small><strong id="todayTotal">0</strong></div>
+<div class="metric"><small>This Month's NTBs</small><strong id="monthTotal">0</strong></div>
+<div class="metric"><small>Staff Members</small><strong id="staffTotal">0</strong></div>
+<div class="metric"><small>Entries This Month</small><strong id="monthEntries">0</strong></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Monthly Staff Ranking</h2><div id="ranking"><div class="empty">No entries yet.</div></div></div>
+<div class="card"><h2>Recent Entries</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Staff</th><th>NTBs</th><th>Note</th></tr></thead><tbody id="recentRows"></tbody></table></div></div>
+</section>
+<section id="entry" class="panel">
+<div class="card"><h2>Add Daily NTB Entry</h2>
+<form id="entryForm">
+<div class="fields">
+<div><label for="entryDate">Date</label><input id="entryDate" type="date" required></div>
+<div><label for="entryStaff">Staff Member</label><select id="entryStaff" required><option value="">Add staff first</option></select></div>
+<div><label for="entryCount">Number of NTB Accounts</label><input id="entryCount" type="number" min="0" step="1" value="0" required></div>
+</div>
+<div style="margin-top:12px"><label for="entryNote">Note (optional)</label><input id="entryNote" maxlength="180" placeholder="e.g. Daily performance"></div>
+<div class="actions"><button class="primary" type="submit">Save Entry</button><button class="secondary" type="reset">Clear</button></div>
+</form></div>
+<div class="card"><h2>Today's Entries</h2><div class="table-wrap"><table><thead><tr><th>Staff</th><th>NTBs</th><th>Note</th><th>Action</th></tr></thead><tbody id="todayRows"></tbody></table></div></div>
+</section>
+<section id="staff" class="panel">
+<div class="card"><h2>Add Staff Member</h2><form id="staffForm"><div class="fields"><div><label for="staffName">Staff Name</label><input id="staffName" maxlength="80" required placeholder="Enter staff name"></div><div><label for="staffRole">Role (optional)</label><input id="staffRole" maxlength="80" placeholder="e.g. CSR / BM"></div><div style="display:flex;align-items:end"><button class="primary" type="submit">Add Staff</button></div></div></form></div>
+<div class="card"><h2>Current Staff</h2><div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Action</th></tr></thead><tbody id="staffRows"></tbody></table></div></div>
+</section>
+<section id="reports" class="panel">
+<div class="card"><h2>Filter Report</h2><div class="fields"><div><label for="reportStartDate">From Date</label><input id="reportStartDate" type="date"></div><div><label for="reportEndDate">To Date</label><input id="reportEndDate" type="date"></div><div><label for="reportStaff">Staff Filter (optional)</label><select id="reportStaff"><option value="all">All Staff</option></select></div><div style="display:flex;align-items:end"><button id="applyReport" class="primary" type="button">Show Report</button></div></div>
+<div class="actions"><button class="green" id="exportCsv" type="button">Download CSV / Excel-compatible File</button><button class="secondary" id="shareWa" type="button">Share via WhatsApp</button></div></div>
+<div class="grid"><div class="metric"><small>NTBs in Selected Report</small><strong id="reportTotal">0</strong></div><div class="metric"><small>Entries in Selected Report</small><strong id="reportCount">0</strong></div></div>
+<div class="card" style="margin-top:14px"><h2>Report Details</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Staff</th><th>NTBs</th><th>Note</th></tr></thead><tbody id="reportRows"></tbody></table></div></div>
+</section>
+<div class="foot">NTB Productivity Dashboard · Firebase Cloud Firestore</div>
+</main>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBKO2Rr0SSLKsUY5vpXIyNrxgG5jems4Yg",
+  authDomain: "ntb-productivity-dashboard.firebaseapp.com",
+  projectId: "ntb-productivity-dashboard",
+  storageBucket: "ntb-productivity-dashboard.firebasestorage.app",
+  messagingSenderId: "1035962618814",
+  appId: "1:1035962618814:web:0050f3158f5d62e9c35fef",
+  measurementId: "G-3J09H3TRBZ"
+};
+
+const $ = id => document.getElementById(id);
+const localDate = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const localMonth = () => localDate().slice(0,7);
+let db, auth, staff = [], entries = [], currentUser = null, unsubscribeStaff, unsubscribeEntries;
+let reportRowsCache = [];
+const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sum = arr => arr.reduce((n,x)=>n+Number(x.count||0),0);
+const monthEntries = () => entries.filter(e => (e.date||'').startsWith(localMonth()));
+const byStaff = rows => { const m={}; rows.forEach(e=>{m[e.staffId]??={name:e.staffName||'Unknown',total:0};m[e.staffId].total+=Number(e.count||0)}); return Object.values(m).sort((a,b)=>b.total-a.total); };
+function showStatus(msg,bad=false){$('connectionStatus').textContent=msg;$('connectionStatus').style.color=bad?'#ffd6d6':'#fff';}
+function blankRow(cols,msg){return `<tr><td colspan="${cols}" class="empty">${msg}</td></tr>`;}
+function refreshStaffSelects(){
+ const opts=staff.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<option value="${safe(s.id)}">${safe(s.name)}${s.role?' — '+safe(s.role):''}</option>`).join('');
+ $('entryStaff').innerHTML=`<option value="">Select staff</option>${opts}`;
+ const current=$('reportStaff').value||'all';$('reportStaff').innerHTML=`<option value="all">All Staff</option>${opts}`;
+ if([...$('reportStaff').options].some(o=>o.value===current))$('reportStaff').value=current;
+}
+function render(){
+ const today=localDate(), mrows=monthEntries();
+ $('todayTotal').textContent=sum(entries.filter(e=>e.date===today));
+ $('monthTotal').textContent=sum(mrows);$('staffTotal').textContent=staff.length;$('monthEntries').textContent=mrows.length;
+ const monthlyRanking=staff.map(s=>({
+   name:s.name,
+   total:mrows.filter(e=>e.staffId===s.id).reduce((n,e)=>n+Number(e.count||0),0)
+ })).sort((a,b)=>b.total-a.total || a.name.localeCompare(b.name));
+ const max=Math.max(1,...monthlyRanking.map(x=>x.total));
+ $('ranking').innerHTML=monthlyRanking.length?monthlyRanking.map((r,i)=>`<div class="rank"><span class="rank-name">${i===0&&r.total>0?'🥇 ':i===1&&r.total>0?'🥈 ':i===2&&r.total>0?'🥉 ':''}${i+1}. ${safe(r.name)}</span><div class="bar"><span style="width:${Math.max(0,Math.min(100,r.total/max*100))}%"></span></div><span class="rank-count">${r.total}</span></div>`).join(''):'<div class="empty">Add staff members to see the ranking.</div>';
+ const recent=entries.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,8);
+ $('recentRows').innerHTML=recent.length?recent.map(e=>`<tr><td>${safe(e.date)}</td><td>${safe(e.staffName)}</td><td>${Number(e.count||0)}</td><td>${safe(e.note||'—')}</td></tr>`).join(''):blankRow(4,'No entries yet.');
+ const todays=entries.filter(e=>e.date===today).sort((a,b)=>(a.staffName||'').localeCompare(b.staffName||''));
+ $('todayRows').innerHTML=todays.length?todays.map(e=>`<tr><td>${safe(e.staffName)}</td><td>${Number(e.count||0)}</td><td>${safe(e.note||'—')}</td><td><button class="danger" data-delete-entry="${safe(e.id)}" type="button">Delete</button></td></tr>`).join(''):blankRow(4,'No entries for today.');
+ $('staffRows').innerHTML=staff.length?staff.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<tr><td>${safe(s.name)}</td><td>${safe(s.role||'—')}</td><td><button class="danger" data-delete-staff="${safe(s.id)}" type="button">Delete</button></td></tr>`).join(''):blankRow(3,'No staff members added yet.');
+ runReport();
+}
+function runReport(){
+ const start=$('reportStartDate').value||localDate(),end=$('reportEndDate').value||start,sid=$('reportStaff').value||'all';
+ reportRowsCache=entries.filter(e=>(e.date||'')>=start&&(e.date||'')<=end&&(sid==='all'||e.staffId===sid)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+ $('reportTotal').textContent=sum(reportRowsCache);$('reportCount').textContent=reportRowsCache.length;
+ $('reportRows').innerHTML=reportRowsCache.length?reportRowsCache.map(e=>`<tr><td>${safe(e.date)}</td><td>${safe(e.staffName)}</td><td>${Number(e.count||0)}</td><td>${safe(e.note||'—')}</td></tr>`).join(''):blankRow(4,'No records found for this filter.');
+}
+async function startApp(){
+ try{
+  const app=initializeApp(firebaseConfig);db=getFirestore(app);auth=getAuth(app);
+  await signInAnonymously(auth);
+  onAuthStateChanged(auth,user=>{
+   if(!user)return;currentUser=user;
+   if(unsubscribeStaff)unsubscribeStaff();if(unsubscribeEntries)unsubscribeEntries();
+   unsubscribeStaff=onSnapshot(collection(db,'ntb_staff'),snap=>{staff=snap.docs.map(d=>({id:d.id,...d.data()}));refreshStaffSelects();render();showStatus('Connected to Firebase');},err=>showStatus('Cannot read staff data: '+err.code,true));
+   unsubscribeEntries=onSnapshot(query(collection(db,'ntb_entries'),orderBy('date','desc')),snap=>{entries=snap.docs.map(d=>({id:d.id,...d.data()}));render();},err=>showStatus('Cannot read entry data: '+err.code,true));
+  });
+ }catch(err){console.error(err);showStatus('Connection failed: '+(err.code||err.message),true);alert('Firebase connection failed. Check that Anonymous sign-in is enabled and Firestore rules allow authenticated access. Error: '+(err.code||err.message));}
+}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.tab));}));
+$('entryDate').value=localDate();$('reportStartDate').value=localDate();$('reportEndDate').value=localDate();
+$('staffForm').addEventListener('submit',async ev=>{ev.preventDefault();if(!db||!currentUser)return alert('Firebase connection is not ready yet.');const name=$('staffName').value.trim(),role=$('staffRole').value.trim();if(!name)return;try{await addDoc(collection(db,'ntb_staff'),{name,role,createdAt:serverTimestamp(),createdBy:currentUser.uid});$('staffForm').reset();}catch(e){alert('Could not save staff: '+e.code);}});
+$('entryForm').addEventListener('submit',async ev=>{ev.preventDefault();if(!db||!currentUser)return alert('Firebase connection is not ready yet.');const staffId=$('entryStaff').value,s=staff.find(x=>x.id===staffId),date=$('entryDate').value,count=Number($('entryCount').value);if(!s||!date||!Number.isInteger(count)||count<0)return alert('Please enter valid information.');try{await addDoc(collection(db,'ntb_entries'),{date,staffId,staffName:s.name,count,note:$('entryNote').value.trim(),createdAt:serverTimestamp(),createdBy:currentUser.uid});$('entryCount').value='0';$('entryNote').value='';}catch(e){alert('Could not save entry: '+e.code);}});
+document.addEventListener('click',async ev=>{
+ const de=ev.target.closest('[data-delete-entry]');if(de){if(!confirm('Delete this entry?'))return;try{await deleteDoc(doc(db,'ntb_entries',de.dataset.deleteEntry));}catch(e){alert('Could not delete entry: '+e.code);}}
+ const ds=ev.target.closest('[data-delete-staff]');if(ds){if(!confirm('Deleting a staff member will keep historical entries. Continue?'))return;try{await deleteDoc(doc(db,'ntb_staff',ds.dataset.deleteStaff));}catch(e){alert('Could not delete staff: '+e.code);}}
+});
+$('applyReport').addEventListener('click',runReport);
+$('exportCsv').addEventListener('click',()=>{
+ runReport();const rows=[['Date','Staff','NTBs','Note'],...reportRowsCache.map(e=>[e.date,e.staffName,e.count,e.note||''])];
+ const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`NTB-report-${$('reportStartDate').value||localDate()}-to-${$('reportEndDate').value||$('reportStartDate').value||localDate()}.csv`;a.click();URL.revokeObjectURL(url);
+});
+$('shareWa').addEventListener('click',()=>{
+ runReport();
+ const start=$('reportStartDate').value||localDate(),end=$('reportEndDate').value||start;
+ const selectedStaff=$('reportStaff').value||'all';
+ const staffForReport=selectedStaff==='all'?staff:staff.filter(s=>s.id===selectedStaff);
+ const totalsByStaff=staffForReport.map(s=>({
+   name:s.name,
+   total:reportRowsCache.filter(e=>e.staffId===s.id).reduce((n,e)=>n+Number(e.count||0),0)
+ })).sort((a,b)=>b.total-a.total || a.name.localeCompare(b.name));
+ const total=sum(reportRowsCache);
+ const productive=totalsByStaff.filter(s=>s.total>0);
+ const zeroProductivity=totalsByStaff.filter(s=>s.total===0);
+ const formatDate=d=>{const [y,m,day]=d.split('-');return `${day}-${m}-${y}`;};
+ const dateLabel=start===end?formatDate(start):`${formatDate(start)} to ${formatDate(end)}`;
+ const lines=[
+   `📊 NTB PRODUCTIVITY REPORT`,
+   `📅 Date: ${dateLabel}`,
+   `✅ Total NTBs: ${total}`,
+   '',
+   `🏆 STAFF-WISE RANKING`,
+   ...(productive.length?productive.map((s,i)=>`${i+1}. ${s.name}: ${s.total} NTB(s)`):['No NTBs recorded for selected date(s).']),
+   '',
+   `⚠️ ZERO PRODUCTIVITY (${zeroProductivity.length})`,
+   ...(zeroProductivity.length?zeroProductivity.map(s=>`• ${s.name}: 0 NTBs`):['None']),
+   '',
+   `Shared from NTB Productivity Dashboard`
+ ];
+ window.open('https://wa.me/?text='+encodeURIComponent(lines.join('\n')),'_blank','noopener');
+});
+startApp();
+</script>
+</body>
+</html>
