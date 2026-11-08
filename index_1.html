@@ -152,49 +152,6 @@ function refreshStaffSelects(){
  const current=$('reportStaff').value||'all';$('reportStaff').innerHTML=`<option value="all">All Staff</option>${allOpts}`;
  if([...$('reportStaff').options].some(o=>o.value===current))$('reportStaff').value=current;
 }
-const entryActions = id => `<div class="btn-row"><button class="secondary small" data-edit-entry="${safe(id)}" type="button">Edit</button><button class="danger small" data-delete-entry="${safe(id)}" type="button">Delete</button></div>`;
-
-function render(){
- const today=localDate(), mrows=monthEntries();
- $('todayTotal').textContent=sum(entries.filter(e=>e.date===today));
- $('monthTotal').textContent=sum(mrows);$('staffTotal').textContent=activeStaff().length;$('monthEntries').textContent=mrows.length;
- const monthlyRanking=totalsByStaff(mrows);
- const max=Math.max(1,...monthlyRanking.map(x=>x.total));
- $('ranking').innerHTML=monthlyRanking.length?monthlyRanking.map((r,i)=>`<div class="rank"><span class="rank-name">${i===0&&r.total>0?'🥇 ':i===1&&r.total>0?'🥈 ':i===2&&r.total>0?'🥉 ':''}${i+1}. ${safe(r.name)}${r.inactive?' <span class="inactive-tag">(inactive)</span>':''}</span><div class="bar"><span style="width:${Math.max(0,Math.min(100,r.total/max*100))}%"></span></div><span class="rank-count">${r.total}</span></div>`).join(''):'<div class="empty">Add staff members to see the ranking.</div>';
- const recent=entries.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,8);
- $('recentRows').innerHTML=recent.length?recent.map(e=>`<tr><td>${safe(e.date)}</td><td>${safe(e.staffName)}</td><td>${Number(e.count||0)}</td><td>${safe(e.note||'—')}</td><td>${entryActions(e.id)}</td></tr>`).join(''):blankRow(5,'No entries yet.');
- const todays=entries.filter(e=>e.date===today).sort((a,b)=>(a.staffName||'').localeCompare(b.staffName||''));
- $('todayRows').innerHTML=todays.length?todays.map(e=>`<tr><td>${safe(e.staffName)}</td><td>${Number(e.count||0)}</td><td>${safe(e.note||'—')}</td><td>${entryActions(e.id)}</td></tr>`).join(''):blankRow(4,'No entries for today.');
- $('staffRows').innerHTML=staff.length?staff.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(s=>{
-  const on=isActive(s);
-  return `<tr><td>${safe(s.name)}</td><td>${safe(s.role||'—')}</td><td><span class="badge ${on?'on':'off'}">${on?'Active':'Inactive'}</span></td><td><button class="${on?'danger':'green'} small" data-toggle-staff="${safe(s.id)}" type="button">${on?'Deactivate':'Reactivate'}</button></td></tr>`;
- }).join(''):blankRow(4,'No staff members added yet.');
- runReport();
-}
-
-function runReport(){
- const start=$('reportStartDate').value||localDate(),end=$('reportEndDate').value||start,sid=$('reportStaff').value||'all';
- const bad = start>end;
- $('reportWarn').style.display = bad ? 'block' : 'none';
- reportRowsCache = bad ? [] : entries.filter(e=>(e.date||'')>=start&&(e.date||'')<=end&&(sid==='all'||e.staffId===sid)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
- $('reportTotal').textContent=sum(reportRowsCache);$('reportCount').textContent=reportRowsCache.length;
- $('reportRows').innerHTML=reportRowsCache.length?reportRowsCache.map(e=>`<tr><td>${safe(e.date)}</td><td>${safe(e.staffName)}</td><td>${Number(e.count||0)}</td><td>${safe(e.note||'—')}</td><td>${entryActions(e.id)}</td></tr>`).join(''):blankRow(5,bad?'Date range galat hai.':'No records found for this filter.');
-}
-
-async function startApp(){
- try{
-  const app=initializeApp(firebaseConfig);db=getFirestore(app);auth=getAuth(app);
-  await signInAnonymously(auth);
-  onAuthStateChanged(auth,user=>{
-   if(!user)return;currentUser=user;
-   if(unsubscribeStaff)unsubscribeStaff();if(unsubscribeEntries)unsubscribeEntries();
-   unsubscribeStaff=onSnapshot(collection(db,'ntb_staff'),snap=>{staff=snap.docs.map(d=>({id:d.id,...d.data()}));refreshStaffSelects();render();showStatus('Connected to Firebase');},err=>showStatus('Cannot read staff data: '+err.code,true));
-   unsubscribeEntries=onSnapshot(query(collection(db,'ntb_entries'),orderBy('date','desc')),snap=>{entries=snap.docs.map(d=>({id:d.id,...d.data()}));render();},err=>showStatus('Cannot read entry data: '+err.code,true));
-  });
- }catch(err){console.error(err);showStatus('Connection failed: '+(err.code||err.message),true);alert('Firebase connection failed. Check that Anonymous sign-in is enabled and Firestore rules allow authenticated access. Error: '+(err.code||err.message));}
-}
-
-document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===b.dataset.tab));}));
 $('entryDate').value=localDate();$('reportStartDate').value=localDate();$('reportEndDate').value=localDate();
 
 // Add staff
@@ -229,8 +186,6 @@ $('editForm').addEventListener('submit',async ev=>{
 });
 
 // Row actions
-document.addEventListener('click',async ev=>{
- const ee=ev.target.closest('[data-edit-entry]');
  if(ee){const e=entries.find(x=>x.id===ee.dataset.editEntry);if(!e)return;editingId=e.id;$('editInfo').textContent=`${e.staffName} · ${e.date}`;$('editCount').value=Number(e.count||0);$('editNote').value=e.note||'';$('editDialog').showModal();return;}
  const de=ev.target.closest('[data-delete-entry]');
  if(de){if(!confirm('Delete this entry?'))return;try{await deleteDoc(doc(db,'ntb_entries',de.dataset.deleteEntry));}catch(e){alert('Could not delete entry: '+e.code);}return;}
